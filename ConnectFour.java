@@ -1,6 +1,5 @@
 // Emmanuel A Oppong
-// 13th October, 2022
-// Converted to Java
+// 29th January, 2026
 
 import java.util.Scanner;
 import java.util.Random;
