@@ -5,8 +5,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🚀 Spring Boot + React App</h1>
-        <p>Full-stack application demo</p>
+        <h1>🚀 Spring Boot + React Full-Stack App</h1>
+        <p>Backend: Java 21 + Spring Boot 3.5.10 | Frontend: React + Vite</p>
       </header>
       <main>
         <UserList />

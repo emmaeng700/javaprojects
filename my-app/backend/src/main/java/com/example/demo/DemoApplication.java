@@ -5,6 +5,7 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
@@ -14,8 +15,8 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    // ⭐ ADDS SAMPLE DATA ON STARTUP
     @Bean
+    @ConditionalOnProperty(name = "app.init-data", havingValue = "true", matchIfMissing = true)
     CommandLineRunner initDatabase(UserRepository repository) {
         return args -> {
             repository.save(new User("Alice Johnson", "alice@example.com"));

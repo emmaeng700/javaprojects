@@ -4,15 +4,74 @@
   padding: 2rem;
 }
 
-.user-list h2 {
-  color: #333;
-  text-align: center;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+}
+
+.header h2 {
+  color: #333;
+  margin: 0;
+}
+
+.add-btn {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #27ae60;
+}
+
+.user-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.user-form input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.user-form input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.user-form button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.user-form button:hover {
+  background: #2980b9;
 }
 
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -41,6 +100,12 @@
   color: #7f8c8d;
 }
 
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .user-id {
   display: inline-block;
   background: #3498db;
@@ -48,6 +113,20 @@
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.85rem;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
 }
 
 .refresh-btn {
@@ -67,7 +146,8 @@
   background: #2980b9;
 }
 
-.loading, .error {
+.loading,
+.error {
   text-align: center;
   padding: 2rem;
   font-size: 1.2rem;
@@ -78,4 +158,11 @@
   background: #fadbd8;
   border-radius: 6px;
   margin: 2rem;
+}
+
+.no-users {
+  text-align: center;
+  color: #7f8c8d;
+  font-style: italic;
+  margin: 2rem 0;
 }
