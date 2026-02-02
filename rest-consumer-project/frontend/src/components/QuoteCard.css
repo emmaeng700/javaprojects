@@ -1,0 +1,119 @@
+.quote-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease-out;
+  border-left: 4px solid #3498db;
+}
+
+.quote-card.consumer {
+  border-left-color: #9b59b6;
+}
+
+.quote-card.quoters {
+  border-left-color: #2ecc71;
+}
+
+.quote-card.new-quote {
+  animation: pulse 0.5s ease-in-out;
+  box-shadow: 0 8px 24px rgba(52, 152, 219, 0.3);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.quote-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.quote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.quote-id {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #7f8c8d;
+}
+
+.quote-source-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+}
+
+.quote-source-badge.consumer {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quote-source-badge.quoters {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.quote-body {
+  margin: 1.5rem 0;
+}
+
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+.quote-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #2c3e50;
+  font-style: italic;
+  margin: 0;
+}
+
+.quote-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ecf0f1;
+}
+
+.quote-status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.quote-status.success {
+  background: #d5f4e6;
+  color: #27ae60;
+}
+
+.quote-status.error {
+  background: #fadbd8;
+  color: #e74c3c;
+}

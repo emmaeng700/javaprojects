@@ -1,0 +1,66 @@
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s;
+}
+
+.status-card:hover {
+  transform: translateY(-4px);
+}
+
+.status-icon {
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.status-card.consumer .status-icon {
+  background: rgba(155, 89, 182, 0.1);
+}
+
+.status-card.quoters .status-icon {
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.status-card.connected .status-icon {
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.status-card.disconnected .status-icon {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.status-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.status-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: #95a5a6;
+}
