@@ -1,48 +1,22 @@
 package com.example.uploadingfiles.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+public interface StorageService {
 
-import com.example.uploadingfiles.config.StorageProperties;
+    void init();
 
-@Service
-public class StorageService {
+    void store(MultipartFile file);
 
-	private final Path rootLocation;
+    Stream<Path> loadAll();
 
-	@Autowired
-	public StorageService(StorageProperties properties) {
-		this.rootLocation = Paths.get(properties.getLocation());
-	}
+    Path load(String filename);
 
-	public void init() {
-		try {
-			Files.createDirectories(rootLocation);
-		} catch (IOException e) {
-			throw new RuntimeException("Could not initialize storage location", e);
-		}
-	}
+    Resource loadAsResource(String filename);
 
-	public void deleteAll() {
-		try {
-			if (Files.exists(rootLocation)) {
-				Files.walk(rootLocation)
-					.sorted(java.util.Comparator.reverseOrder())
-					.forEach(path -> {
-						try {
-							Files.delete(path);
-						} catch (IOException e) {
-							throw new RuntimeException("Could not delete " + path, e);
-						}
-					});
-			}
-		} catch (IOException e) {
-			throw new RuntimeException("Could not delete storage location", e);
-		}
-	}
+    void deleteAll();
 }
