@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis Chat - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #DC382D 0%, #8B0000 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .redis-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #DC382D 0%, #B42318 100%);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(220, 56, 45, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            font-size: 40px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #DC382D;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #DC382D;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 56, 45, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #DC382D 0%, #B42318 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(220, 56, 45, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 56, 45, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border-left: 4px solid #DC382D;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: #DC382D;
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+            font-size: 14px;
+            line-height: 2;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #DC382D;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="redis-logo">
+            ⚡
+        </div>
+        <h1>Redis Chat</h1>
+        <p class="subtitle">Real-time messaging powered by Redis Pub/Sub</p>
+        <span class="badge">🚀 Lightning Fast</span>
+        
+        <form action="/chat" method="get">
+            <div class="form-group">
+                <label for="username">👤 Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required minlength="2" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="room">🚪 Select Chat Room</label>
+                <select id="room" name="room" required>
+                    <option value="">Choose a room...</option>
+                    <option value="general">🌍 General Chat</option>
+                    <option value="tech">💻 Tech Talk</option>
+                    <option value="gaming">🎮 Gaming</option>
+                    <option value="music">🎵 Music Lounge</option>
+                    <option value="sports">⚽ Sports Arena</option>
+                    <option value="random">🎲 Random</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn">🚀 Join Chat Room</button>
+        </form>
+
+        <div class="info-box">
+            <h3>⚡ How Redis Chat Works:</h3>
+            <ul>
+                <li><strong>Publish:</strong> Your message goes to Redis</li>
+                <li><strong>Subscribe:</strong> Redis broadcasts to all users</li>
+                <li><strong>WebSocket:</strong> Real-time updates instantly</li>
+                <li><strong>Multi-Room:</strong> Independent chat channels</li>
+            </ul>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number">⚡</span>
+                <div class="stat-label">Real-time</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">6</span>
+                <div class="stat-label">Rooms</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">∞</span>
+                <div class="stat-label">Messages</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

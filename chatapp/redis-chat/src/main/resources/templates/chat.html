@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Redis Chat - ' + ${room}">Redis Chat</title>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #DC382D 0%, #B42318 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .room-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .room-info h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .room-info .status {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .leave-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .leave-btn:hover {
+            background: white;
+            color: #DC382D;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease;
+            max-width: 70%;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #DC382D 0%, #B42318 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .message.own .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message-content {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .message.own .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #DC382D;
+        }
+
+        .message.own .message-sender {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .message.own .message-text {
+            color: white;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .message.own .message-time {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .system-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px auto;
+            background: rgba(220, 56, 45, 0.1);
+            border-radius: 20px;
+            color: #DC382D;
+            font-size: 14px;
+            max-width: 400px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #DC382D;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 56, 45, 0.1);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #DC382D 0%, #B42318 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(220, 56, 45, 0.3);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(220, 56, 45, 0.4);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 20px;
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            color: #10b981;
+        }
+
+        .connection-status.disconnected {
+            color: #ef4444;
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #DC382D;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B42318;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status disconnected" id="connectionStatus">
+        <span class="connection-dot"></span>
+        <span id="statusText">Connecting...</span>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="room-icon">🚪</div>
+                <div class="room-info">
+                    <h1 th:text="'#' + ${room}">Room Name</h1>
+                    <div class="status">
+                        <span class="status-indicator"></span>
+                        <span>Connected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="user-badge">
+                    👤 <span th:text="${username}">Username</span>
+                </div>
+                <button class="leave-btn" onclick="leaveRoom()">
+                    🚪 Leave Room
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="messageArea">
+            <!-- Messages will appear here -->
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            Someone is typing...
+        </div>
+
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="messageInput" 
+                placeholder="Type your message..." 
+                maxlength="500"
+                autocomplete="off"
+            >
+            <button class="send-btn" onclick="sendMessage()">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const username = /*[[${username}]]*/ 'Guest';
+        const room = /*[[${room}]]*/ 'general';
+        /*]]>*/
+
+        let stompClient = null;
+        let isConnected = false;
+
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, onConnected, onError);
+        }
+
+        function onConnected() {
+            isConnected = true;
+            updateConnectionStatus(true);
+            
+            // Subscribe to the room
+            stompClient.subscribe('/topic/messages/' + room, onMessageReceived);
+            
+            // Send join notification
+            const joinMessage = {
+                sender: username,
+                content: username + ' joined the room!',
+                room: room,
+                type: 'JOIN'
+            };
+            stompClient.send("/app/chat.join", {}, JSON.stringify(joinMessage));
+            
+            console.log('Connected to chat room: ' + room);
+        }
+
+        function onError(error) {
+            isConnected = false;
+            updateConnectionStatus(false);
+            console.error('WebSocket connection error:', error);
+            setTimeout(connect, 3000); // Retry connection
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageContent = messageInput.value.trim();
+            
+            if (messageContent && stompClient && isConnected) {
+                const chatMessage = {
+                    sender: username,
+                    content: messageContent,
+                    room: room,
+                    type: 'CHAT'
+                };
+                
+                stompClient.send("/app/chat.send", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        }
+
+        function onMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            displayMessage(message);
+        }
+
+        function displayMessage(message) {
+            const messageArea = document.getElementById('messageArea');
+            const messageElement = document.createElement('div');
+            
+            if (message.type === 'JOIN' || message.type === 'LEAVE') {
+                messageElement.className = 'system-message';
+                messageElement.textContent = message.content;
+            } else {
+                const isOwn = message.sender === username;
+                messageElement.className = isOwn ? 'message own' : 'message';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = message.sender.charAt(0).toUpperCase();
+                
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                
+                const sender = document.createElement('div');
+                sender.className = 'message-sender';
+                sender.textContent = message.sender;
+                
+                const text = document.createElement('div');
+                text.className = 'message-text';
+                text.textContent = message.content;
+                
+                const time = document.createElement('div');
+                time.className = 'message-time';
+                time.textContent = new Date().toLocaleTimeString();
+                
+                content.appendChild(sender);
+                content.appendChild(text);
+                content.appendChild(time);
+                
+                messageElement.appendChild(avatar);
+                messageElement.appendChild(content);
+            }
+            
+            messageArea.appendChild(messageElement);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        function leaveRoom() {
+            if (stompClient && isConnected) {
+                const leaveMessage = {
+                    sender: username,
+                    content: username + ' left the room!',
+                    room: room,
+                    type: 'LEAVE'
+                };
+                stompClient.send("/app/chat.leave", {}, JSON.stringify(leaveMessage));
+                stompClient.disconnect();
+            }
+            window.location.href = '/';
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusElement.className = 'connection-status connected';
+                statusText.textContent = 'Connected';
+            } else {
+                statusElement.className = 'connection-status disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Prevent page unload without leaving properly
+        window.addEventListener('beforeunload', function(e) {
+            if (isConnected) {
+                leaveRoom();
+            }
+        });
+
+        // Connect on page load
+        connect();
+    </script>
+</body>
+</html>
