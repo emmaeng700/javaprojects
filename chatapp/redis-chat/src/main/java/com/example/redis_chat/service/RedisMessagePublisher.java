@@ -15,9 +15,19 @@ public class RedisMessagePublisher {
     @Autowired
     private RedisTemplate<String, ChatMessage> redisTemplate;
 
+    @Autowired
+    private MessageHistoryService messageHistoryService;
+
     public void publish(ChatMessage message) {
         String channel = "chat." + message.getRoom();
         logger.info("Publishing message to Redis channel: {}", channel);
+        
+        // Publish to Redis Pub/Sub for real-time delivery
         redisTemplate.convertAndSend(channel, message);
+        
+        // Save to history (only for CHAT messages, not JOIN/LEAVE)
+        if (message.getType() == ChatMessage.MessageType.CHAT) {
+            messageHistoryService.saveMessage(message);
+        }
     }
 }

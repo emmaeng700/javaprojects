@@ -41,13 +41,7 @@
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 		
-		<!-- Docker Compose Support -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-docker-compose</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
+		
 		
 		<!-- Jackson for JSON -->
 		<dependency>
