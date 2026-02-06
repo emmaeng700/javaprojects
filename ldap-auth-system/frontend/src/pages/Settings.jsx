@@ -26,7 +26,7 @@ const Settings = () => {
                 className="form-input" 
                 value={user?.username} 
                 disabled 
-                style={{background: '#f5f5f5'}}
+                style={{background: '#f5f5f5', borderRadius: '4px'}}
               />
             </div>
             <div className="form-group">
@@ -36,7 +36,7 @@ const Settings = () => {
                 className="form-input" 
                 value={user?.fullName} 
                 disabled 
-                style={{background: '#f5f5f5'}}
+                style={{background: '#f5f5f5', borderRadius: '4px'}}
               />
             </div>
             <div className="form-group">
@@ -46,7 +46,7 @@ const Settings = () => {
                 className="form-input" 
                 value={user?.email} 
                 disabled 
-                style={{background: '#f5f5f5'}}
+                style={{background: '#f5f5f5', borderRadius: '4px'}}
               />
             </div>
             <button className="btn-primary" style={{width: 'auto'}}>Update Profile</button>
@@ -56,15 +56,15 @@ const Settings = () => {
             <h2 className="card-title">Change Password</h2>
             <div className="form-group">
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Current Password</label>
-              <input type="password" className="form-input" placeholder="Enter current password" />
+              <input type="password" className="form-input" placeholder="Enter current password" style={{borderRadius: '4px'}} />
             </div>
             <div className="form-group">
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>New Password</label>
-              <input type="password" className="form-input" placeholder="Enter new password" />
+              <input type="password" className="form-input" placeholder="Enter new password" style={{borderRadius: '4px'}} />
             </div>
             <div className="form-group">
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Confirm New Password</label>
-              <input type="password" className="form-input" placeholder="Confirm new password" />
+              <input type="password" className="form-input" placeholder="Confirm new password" style={{borderRadius: '4px'}} />
             </div>
             <button className="btn-primary" style={{width: 'auto'}}>Change Password</button>
           </div>

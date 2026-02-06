@@ -6,10 +6,9 @@ import { Navigate } from 'react-router-dom';
 const ManagerPanel = () => {
   const { user } = useAuth();
 
-  // Check if user has MANAGER role
   if (!user?.role?.includes('ROLE_MANAGER') && !user?.role?.includes('ROLE_ADMIN')) {
-  return <Navigate to="/access-denied" state={{ from: '/manager' }} replace />;
-}
+    return <Navigate to="/access-denied" state={{ from: '/manager' }} replace />;
+  }
 
   return (
     <>
@@ -76,19 +75,19 @@ const ManagerPanel = () => {
                 <tbody>
                   <tr style={{borderBottom: '1px solid #eee'}}>
                     <td style={{padding: '12px'}}>Website Redesign</td>
-                    <td style={{padding: '12px'}}>Bob Hamilton</td>
+                    <td style={{padding: '12px'}}>{user?.fullName}</td>
                     <td style={{padding: '12px'}}><span className="badge">In Progress</span></td>
                     <td style={{padding: '12px'}}>75%</td>
                   </tr>
                   <tr style={{borderBottom: '1px solid #eee'}}>
                     <td style={{padding: '12px'}}>Mobile App</td>
-                    <td style={{padding: '12px'}}>Alice Johnson</td>
+                    <td style={{padding: '12px'}}>Team Member</td>
                     <td style={{padding: '12px'}}><span className="badge">Planning</span></td>
                     <td style={{padding: '12px'}}>20%</td>
                   </tr>
                   <tr>
                     <td style={{padding: '12px'}}>API Integration</td>
-                    <td style={{padding: '12px'}}>Bob Hamilton</td>
+                    <td style={{padding: '12px'}}>{user?.fullName}</td>
                     <td style={{padding: '12px'}}><span className="badge">Completed</span></td>
                     <td style={{padding: '12px'}}>100%</td>
                   </tr>
