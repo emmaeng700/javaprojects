@@ -29,17 +29,14 @@ const Navbar = () => {
           <div className="navbar-menu">
             <Link to="/dashboard" className="navbar-link">Dashboard</Link>
             
-            {/* Admin only */}
             {hasRole('ROLE_ADMIN') && (
               <Link to="/admin" className="navbar-link">🔐 Admin Panel</Link>
             )}
             
-            {/* Manager and Admin */}
             {(hasRole('ROLE_MANAGER') || hasRole('ROLE_ADMIN')) && (
               <Link to="/manager" className="navbar-link">📊 Manager Panel</Link>
             )}
             
-            {/* All users */}
             <Link to="/settings" className="navbar-link">Settings</Link>
             
             <div className="navbar-user">

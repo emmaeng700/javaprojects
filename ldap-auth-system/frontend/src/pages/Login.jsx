@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -39,24 +38,29 @@ const Login = () => {
     setLoading(false);
   };
 
-  const demoUsers = [
-    { username: 'ben', password: 'benspassword', role: 'Admin', access: 'Full Access' },
-    { username: 'joe', password: 'joespassword', role: 'Manager', access: 'Manager + User' },
-    { username: 'bob', password: 'bobspassword', role: 'User', access: 'User Only' },
-    { username: 'alice', password: 'alicespassword', role: 'User', access: 'User Only' }
-  ];
-
   return (
-    <div className="login-container">
+    <div className="login-container" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
       <div className="login-box">
         <div className="login-icon">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
         
-        <h2 className="login-title">Sign in to your account</h2>
-        <p className="login-subtitle">Enter your credentials to continue</p>
+        <div style={{
+          background: '#e6f0ff',
+          border: '2px solid #667eea',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{margin: '0 0 5px 0', color: '#667eea', fontSize: '20px'}}>
+            👤 User Portal
+          </h2>
+          <p style={{margin: 0, fontSize: '14px', color: '#666'}}>
+            Standard user access - All registered users can login here
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
@@ -95,6 +99,15 @@ const Login = () => {
           </Link>
         </div>
 
+        <div style={{marginTop: '15px', textAlign: 'center', fontSize: '14px'}}>
+          <Link to="/admin-login" style={{color: '#e53e3e', textDecoration: 'none', fontWeight: '600', marginRight: '15px'}}>
+            Admin Portal
+          </Link>
+          <Link to="/manager-login" style={{color: '#9f7aea', textDecoration: 'none', fontWeight: '600'}}>
+            Manager Portal
+          </Link>
+        </div>
+
         <div style={{marginTop: '20px', textAlign: 'center'}}>
           <button 
             onClick={() => setShowDemoUsers(!showDemoUsers)}
@@ -107,75 +120,26 @@ const Login = () => {
               textDecoration: 'underline'
             }}
           >
-            {showDemoUsers ? '✕ Hide' : '👁️ Show'} Test Users
+            {showDemoUsers ? '✕ Hide' : '👁️ Show'} Test Users (if any exist)
           </button>
         </div>
 
         {showDemoUsers && (
-          <>
-            <div className="divider">
-              <span>Test Accounts</span>
-            </div>
-
-            <div style={{
-              background: '#f5f5f5',
-              padding: '15px',
-              borderRadius: '8px',
-              fontSize: '13px'
-            }}>
-              {demoUsers.map((demo) => (
-                <div key={demo.username} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px',
-                  background: 'white',
-                  marginBottom: '8px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }}>
-                  <div>
-                    <div style={{fontWeight: 'bold', color: '#333'}}>{demo.username}</div>
-                    <div style={{fontSize: '11px', color: '#666'}}>{demo.role} - {demo.access}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername(demo.username);
-                      setPassword(demo.password);
-                    }}
-                    style={{
-                      padding: '6px 12px',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Use
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div style={{
-              marginTop: '15px',
-              padding: '12px',
-              background: '#e6f0ff',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#333'
-            }}>
-              <strong>💡 Try this:</strong>
-              <ul style={{margin: '8px 0 0 20px', lineHeight: '1.6'}}>
-                <li>Login as <strong>bob</strong> and try accessing Admin Panel</li>
-                <li>Login as <strong>joe</strong> and try accessing Admin Panel</li>
-                <li>Login as <strong>ben</strong> to see full access</li>
-              </ul>
-            </div>
-          </>
+          <div style={{
+            marginTop: '15px',
+            padding: '12px',
+            background: '#e6f0ff',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#333'
+          }}>
+            <strong>💡 Try this:</strong>
+            <ul style={{margin: '8px 0 0 20px', lineHeight: '1.6'}}>
+              <li>Register as <strong>USER</strong> and try accessing Admin Portal</li>
+              <li>Register as <strong>MANAGER</strong> and try accessing Admin Portal</li>
+              <li>Register as <strong>ADMIN</strong> to see full access</li>
+            </ul>
+          </div>
         )}
       </div>
     </div>

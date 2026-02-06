@@ -19,7 +19,6 @@ const ManagerLogin = () => {
     const result = await login(username, password);
     
     if (result.success) {
-      // Check if user has MANAGER or ADMIN role
       if (result.user?.role?.includes('ROLE_MANAGER') || result.user?.role?.includes('ROLE_ADMIN')) {
         navigate('/manager');
       } else {

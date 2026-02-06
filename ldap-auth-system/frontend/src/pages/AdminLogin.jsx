@@ -19,12 +19,10 @@ const AdminLogin = () => {
     const result = await login(username, password);
     
     if (result.success) {
-      // Check if user has ADMIN role
       if (result.user?.role?.includes('ROLE_ADMIN')) {
         navigate('/admin');
       } else {
         setError(`Access Denied! You are registered as ${result.user?.role?.replace('ROLE_', '')} but this portal requires ADMIN role.`);
-        // Auto logout the non-admin user
         setTimeout(() => {
           window.location.href = '/';
         }, 3000);
@@ -93,7 +91,7 @@ const AdminLogin = () => {
         </form>
 
         <div style={{marginTop: '20px', textAlign: 'center', fontSize: '14px'}}>
-          <Link to="/manager-login" style={{color: '#667eea', textDecoration: 'none', fontWeight: '600', marginRight: '15px'}}>
+          <Link to="/manager-login" style={{color: '#9f7aea', textDecoration: 'none', fontWeight: '600', marginRight: '15px'}}>
             Manager Portal
           </Link>
           <Link to="/login" style={{color: '#667eea', textDecoration: 'none', fontWeight: '600'}}>
@@ -112,7 +110,7 @@ const AdminLogin = () => {
           <strong>ℹ️ Portal Access:</strong>
           <ul style={{margin: '8px 0 0 20px', lineHeight: '1.6'}}>
             <li>Only accounts with <strong>ADMIN</strong> role can login here</li>
-            <li>Wrong portal? <Link to="/manager-login" style={{color: '#667eea'}}>Try Manager</Link> or <Link to="/login" style={{color: '#667eea'}}>User</Link></li>
+            <li>Wrong portal? <Link to="/manager-login" style={{color: '#9f7aea'}}>Try Manager</Link> or <Link to="/login" style={{color: '#667eea'}}>User</Link></li>
           </ul>
         </div>
       </div>
