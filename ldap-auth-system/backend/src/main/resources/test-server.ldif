@@ -1,0 +1,72 @@
+dn: dc=springframework,dc=org
+objectclass: top
+objectclass: domain
+objectclass: extensibleObject
+dc: springframework
+
+dn: ou=groups,dc=springframework,dc=org
+objectclass: top
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=people,dc=springframework,dc=org
+objectclass: top
+objectclass: organizationalUnit
+ou: people
+
+dn: uid=ben,ou=people,dc=springframework,dc=org
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Ben Alex
+sn: Alex
+uid: ben
+userPassword: $2a$10$c6bSeWPhg06xB1lvmaWNNe4NROmZiSpYhlocU/98HNr2MhIOiSt36
+
+dn: uid=bob,ou=people,dc=springframework,dc=org
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Bob Hamilton
+sn: Hamilton
+uid: bob
+userPassword: $2a$10$elAJF6VVkDyXVl9SIfHmUO7sKKfD9GgLk9ShRCYLEX0LrQKrOdCWy
+
+dn: uid=joe,ou=people,dc=springframework,dc=org
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Joe Smeth
+sn: Smeth
+uid: joe
+userPassword: $2a$10$EWdV8vXCLXHqDLW.xqHTbuUXJbfFLsQ6tFLm0PaKXKkYNz7lYdB56
+
+dn: uid=alice,ou=people,dc=springframework,dc=org
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Alice Johnson
+sn: Johnson
+uid: alice
+userPassword: $2a$10$8K1p/c/MUsBCZy/sV1Hx0e5I8z5Zq8yLQKxMxXNvMGgLKJYWXm8yi
+
+dn: cn=developers,ou=groups,dc=springframework,dc=org
+objectclass: top
+objectclass: groupOfUniqueNames
+cn: developers
+ou: developer
+uniqueMember: uid=ben,ou=people,dc=springframework,dc=org
+uniqueMember: uid=bob,ou=people,dc=springframework,dc=org
+uniqueMember: uid=alice,ou=people,dc=springframework,dc=org
+
+dn: cn=managers,ou=groups,dc=springframework,dc=org
+objectclass: top
+objectclass: groupOfUniqueNames
+cn: managers
+ou: manager
+uniqueMember: uid=ben,ou=people,dc=springframework,dc=org
+uniqueMember: uid=joe,ou=people,dc=springframework,dc=org
