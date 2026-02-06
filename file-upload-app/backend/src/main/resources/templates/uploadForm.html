@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .message {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        .upload-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .upload-section h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        input[type="file"] {
+            padding: 15px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        input[type="file"]:hover {
+            border-color: #2980b9;
+            background: #ecf0f1;
+        }
+        input[type="submit"] {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        input[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        .files-section {
+            margin-top: 40px;
+        }
+        .files-section h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .files-list {
+            list-style: none;
+        }
+        .files-list li {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3498db;
+        }
+        .files-list li:hover {
+            background: #ecf0f1;
+            transform: translateX(5px);
+        }
+        .files-list a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .files-list a:hover {
+            color: #2980b9;
+        }
+        .no-files {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+            font-size: 1.1em;
+        }
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 File Upload System</h1>
+        <p class="subtitle">Upload and manage your files securely</p>
+
+        <div th:if="${message}" class="message">
+            ✅ <span th:text="${message}"></span>
+        </div>
+
+        <div class="upload-section">
+            <h2>📤 Upload New File</h2>
+            <form method="POST" enctype="multipart/form-data" action="/">
+                <input type="file" name="file" required />
+                <input type="submit" value="Upload File" />
+            </form>
+        </div>
+
+        <div class="files-section">
+            <h2>
+                📂 Uploaded Files 
+                <span class="badge" th:text="${#lists.size(files)}">0</span>
+            </h2>
+            
+            <ul class="files-list" th:if="${!#lists.isEmpty(files)}">
+                <li th:each="file : ${files}">
+                    <a th:href="${file}">
+                        📄 <span th:text="${#strings.substringAfter(file, '/files/')}"></span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="no-files" th:if="${#lists.isEmpty(files)}">
+                📭 No files uploaded yet
+            </div>
+        </div>
+    </div>
+</body>
+</html>

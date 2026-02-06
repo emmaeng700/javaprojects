@@ -35,17 +35,23 @@ public class FileUploadController {
     public String listUploadedFiles(Model model) {
         log.info("Listing uploaded files");
         
-        List<String> files = storageService.loadAll()
-                .map(path -> MvcUriComponentsBuilder.fromMethodName(
-                        FileUploadController.class,
-                        "serveFile",
-                        path.getFileName().toString())
-                        .build()
-                        .toUri()
-                        .toString())
-                .collect(Collectors.toList());
+        try {
+            List<String> files = storageService.loadAll()
+                    .map(path -> MvcUriComponentsBuilder.fromMethodName(
+                            FileUploadController.class,
+                            "serveFile",
+                            path.getFileName().toString())
+                            .build()
+                            .toUri()
+                            .toString())
+                    .collect(Collectors.toList());
+            
+            model.addAttribute("files", files);
+        } catch (Exception e) {
+            log.error("Error loading files", e);
+            model.addAttribute("files", List.of());
+        }
         
-        model.addAttribute("files", files);
         return "uploadForm";
     }
 
@@ -54,16 +60,17 @@ public class FileUploadController {
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         log.info("Serving file: {}", filename);
         
-        Resource file = storageService.loadAsResource(filename);
-
-        if (file == null) {
+        try {
+            Resource file = storageService.loadAsResource(filename);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + file.getFilename() + "\"")
+                    .body(file);
+        } catch (StorageFileNotFoundException e) {
+            log.error("File not found: {}", filename);
             return ResponseEntity.notFound().build();
         }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + file.getFilename() + "\"")
-                .body(file);
     }
 
     @PostMapping("/")
@@ -72,9 +79,15 @@ public class FileUploadController {
         
         log.info("Uploading file: {}", file.getOriginalFilename());
         
-        storageService.store(file);
-        redirectAttributes.addFlashAttribute("message",
-                "You successfully uploaded " + file.getOriginalFilename() + "!");
+        try {
+            storageService.store(file);
+            redirectAttributes.addFlashAttribute("message",
+                    "You successfully uploaded " + file.getOriginalFilename() + "!");
+        } catch (Exception e) {
+            log.error("Failed to upload file", e);
+            redirectAttributes.addFlashAttribute("message",
+                    "Failed to upload file: " + e.getMessage());
+        }
 
         return "redirect:/";
     }
