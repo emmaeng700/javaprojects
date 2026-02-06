@@ -10,7 +10,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Auth API
 export const authAPI = {
   login: (username, password) => {
     const auth = btoa(`${username}:${password}`);
@@ -51,7 +50,6 @@ export const authAPI = {
   }
 };
 
-// Public API
 export const publicAPI = {
   health: () => api.get('/api/public/health')
 };

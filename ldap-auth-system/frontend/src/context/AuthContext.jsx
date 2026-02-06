@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [credentials, setCredentials] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
     const storedUsername = localStorage.getItem('username');
     const storedPassword = localStorage.getItem('password');
 
@@ -46,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         setCredentials({ username, password });
         localStorage.setItem('username', username);
         localStorage.setItem('password', password);
-        return { success: true };
+        return { success: true, user: response.data.user };
       } else {
         return { success: false, message: 'Authentication failed' };
       }

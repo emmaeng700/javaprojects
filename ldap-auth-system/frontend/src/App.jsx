@@ -3,12 +3,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import AdminPanel from './pages/AdminPanel';
 import ManagerPanel from './pages/ManagerPanel';
 import Settings from './pages/Settings';
 import AccessDenied from './pages/AccessDenied';
+import AdminLogin from './pages/AdminLogin';
+import ManagerLogin from './pages/ManagerLogin';
 
 function App() {
   return (
@@ -17,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/access-denied" element={
             <ProtectedRoute>
               <AccessDenied />
@@ -54,6 +58,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/manager-login" element={<ManagerLogin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

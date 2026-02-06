@@ -8,8 +8,8 @@ const ManagerPanel = () => {
 
   // Check if user has MANAGER role
   if (!user?.role?.includes('ROLE_MANAGER') && !user?.role?.includes('ROLE_ADMIN')) {
-    return <Navigate to="/access-denied" replace />;
-  }
+  return <Navigate to="/access-denied" state={{ from: '/manager' }} replace />;
+}
 
   return (
     <>

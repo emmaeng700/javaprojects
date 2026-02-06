@@ -8,8 +8,8 @@ const AdminPanel = () => {
 
   // Check if user has ADMIN role
   if (!user?.role?.includes('ROLE_ADMIN')) {
-    return <Navigate to="/access-denied" replace />;
-  }
+  return <Navigate to="/access-denied" state={{ from: '/admin' }} replace />;
+}
 
   return (
     <>
