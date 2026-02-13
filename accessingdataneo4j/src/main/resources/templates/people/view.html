@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Person - ' + ${person.name}">Person Details</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2 { color: #1a1a2e; }
+        h2 { font-size: 18px; margin-bottom: 12px; }
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .detail-row { display: flex; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { width: 120px; font-weight: 500; color: #666; }
+        .detail-value { flex: 1; }
+        .btn { display: inline-block; padding: 8px 16px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; }
+        .btn-primary { background: #4361ee; }
+        .btn-primary:hover { background: #3a56d4; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .actions { display: flex; gap: 10px; margin-top: 16px; }
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        a { color: #4361ee; text-decoration: none; }
+        .back-link { margin-bottom: 16px; display: inline-block; }
+        .teammate-list { list-style: none; }
+        .teammate-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .teammate-item:last-child { border-bottom: none; }
+        .add-teammate { display: flex; gap: 8px; margin-top: 12px; }
+        .add-teammate select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .empty { color: #888; font-style: italic; padding: 10px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a class="back-link" th:href="@{/people}">&larr; Back to list</a>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="card">
+        <h1 th:text="${person.name}"></h1>
+        <div style="margin-top: 16px;">
+            <div class="detail-row">
+                <span class="detail-label">Email</span>
+                <span class="detail-value" th:text="${person.email ?: 'Not set'}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Role</span>
+                <span class="detail-value" th:text="${person.role ?: 'Not set'}"></span>
+            </div>
+        </div>
+        <div class="actions">
+            <a class="btn btn-primary" th:href="@{/people/{id}/edit(id=${person.id})}">Edit</a>
+            <form th:action="@{/people/{id}/delete(id=${person.id})}" method="post"
+                  onsubmit="return confirm('Are you sure you want to delete this person?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Teammates (<span th:text="${person.teammates.size()}"></span>)</h2>
+
+        <div th:if="${person.teammates.isEmpty()}" class="empty">No teammates yet.</div>
+
+        <ul class="teammate-list" th:unless="${person.teammates.isEmpty()}">
+            <li class="teammate-item" th:each="teammate : ${person.teammates}">
+                <a th:href="@{/people/{id}(id=${teammate.id})}" th:text="${teammate.name}"></a>
+                <form th:action="@{/people/{pid}/teammates/{tid}/remove(pid=${person.id}, tid=${teammate.id})}"
+                      method="post" style="margin:0;">
+                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                </form>
+            </li>
+        </ul>
+
+        <div th:unless="${#lists.isEmpty(availableTeammates)}">
+            <form class="add-teammate" th:action="@{/people/{pid}/teammates/{tid}(pid=${person.id}, tid=__${''}__)}"
+                  method="post" id="addTeammateForm">
+                <select id="teammateSelect">
+                    <option value="">-- Select a person --</option>
+                    <option th:each="p : ${availableTeammates}" th:value="${p.id}" th:text="${p.name}"></option>
+                </select>
+                <button type="button" class="btn btn-primary btn-sm" onclick="addTeammate()">Add Teammate</button>
+            </form>
+            <script>
+                function addTeammate() {
+                    var select = document.getElementById('teammateSelect');
+                    var tid = select.value;
+                    if (!tid) { alert('Please select a person'); return; }
+                    var pid = '[[${person.id}]]';
+                    var form = document.getElementById('addTeammateForm');
+                    form.action = '/people/' + pid + '/teammates/' + tid;
+                    form.submit();
+                }
+            </script>
+        </div>
+    </div>
+</div>
+</body>
+</html>
