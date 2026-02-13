@@ -64,4 +64,5 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
      */
     @Query("MATCH (p:Person) WHERE NOT (p)-[:TEAMMATE]-() RETURN p")
     List<Person> findPeopleWithNoTeammates();
+
 }

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Team Manager - Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+<div class="container">
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <!-- Seed Banner (shown when empty) -->
+    <div th:if="${isEmpty}" class="seed-banner">
+        <h2>Welcome to Neo4j Team Manager</h2>
+        <p>Your database is empty. Load demo data to explore the app with 10 team members and their relationships.</p>
+        <form th:action="@{/seed}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-lg">Load Demo Data</button>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div th:unless="${isEmpty}">
+        <h1>Dashboard</h1>
+        <p class="subtitle">Real-time stats powered by Neo4j Cypher queries</p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalPeople}">0</div>
+                <div class="stat-label">Total People</div>
+            </div>
+            <div class="stat-card accent-green">
+                <div class="stat-value" th:text="${totalConnections}">0</div>
+                <div class="stat-label">Connections</div>
+            </div>
+            <div class="stat-card accent-purple">
+                <div class="stat-value" th:text="${topPerson ?: 'N/A'}">-</div>
+                <div class="stat-label">Most Connected</div>
+            </div>
+            <div class="stat-card accent-orange">
+                <div class="stat-value" th:text="${lonelyCount}">0</div>
+                <div class="stat-label">No Teammates</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- Role Distribution Chart -->
+            <div class="card">
+                <h2>Role Distribution</h2>
+                <canvas id="roleChart" height="220"></canvas>
+            </div>
+
+            <!-- Connection Leaderboard -->
+            <div class="card">
+                <h2>Connection Leaderboard</h2>
+                <div th:each="entry, iter : ${connectionRanking}" th:if="${iter.index < 5}" class="leaderboard-item">
+                    <span class="leaderboard-rank"
+                          th:classappend="${iter.index == 0} ? 'gold' : (${iter.index == 1} ? 'silver' : (${iter.index == 2} ? 'bronze' : ''))"
+                          th:text="${iter.index + 1}">1</span>
+                    <span style="min-width:100px;" th:text="${entry['name']}">Name</span>
+                    <div class="leaderboard-bar">
+                        <div class="leaderboard-bar-fill"
+                             th:style="'width:' + ${connectionRanking.isEmpty() ? 0 : (entry['connections'] * 100 / connectionRanking.get(0)['connections'])} + '%'"></div>
+                    </div>
+                    <span class="badge badge-primary" th:text="${entry['connections']}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="margin-bottom:4px;">Quick Actions</h2>
+                <p class="subtitle" style="margin-bottom:0;">Manage your team</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <a class="btn btn-primary" th:href="@{/people/new}">+ Add Person</a>
+                <a class="btn btn-secondary" th:href="@{/graph}">View Graph</a>
+                <form th:action="@{/seed}" method="post" style="display:inline;"
+                      onsubmit="return confirm('This will replace all data with demo data. Continue?');">
+                    <button type="submit" class="btn btn-danger">Reset Demo Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:if="${!isEmpty}" th:inline="javascript">
+    var roleData = /*[[${roleDistribution}]]*/ [];
+    if (roleData.length > 0) {
+        var labels = roleData.map(function(r) { return r.role; });
+        var counts = roleData.map(function(r) { return r.count; });
+        var colors = ['#4361ee', '#7209b7', '#f72585', '#4cc9f0', '#4895ef', '#fd7e14', '#28a745'];
+        new Chart(document.getElementById('roleChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 16 } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

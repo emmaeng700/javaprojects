@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Head Fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Team Manager</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<!-- Navigation Fragment -->
+<nav th:fragment="nav(active)" class="navbar">
+    <a class="navbar-brand" th:href="@{/dashboard}">
+        &#9679; Neo4j Team Manager
+    </a>
+    <ul class="navbar-nav">
+        <li><a th:href="@{/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a></li>
+        <li><a th:href="@{/people}" th:classappend="${active == 'people'} ? 'active'">People</a></li>
+        <li><a th:href="@{/graph}" th:classappend="${active == 'graph'} ? 'active'">Graph</a></li>
+    </ul>
+</nav>
+
+<!-- Alerts Fragment -->
+<div th:fragment="alerts">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+</div>
+
+</html>

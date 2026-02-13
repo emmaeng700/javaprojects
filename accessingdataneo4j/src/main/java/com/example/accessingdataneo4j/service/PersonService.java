@@ -8,8 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service layer for Person business logic
@@ -180,6 +184,130 @@ public class PersonService {
      */
     public boolean personExists(Long id) {
         return personRepository.existsById(id);
+    }
+
+    // DASHBOARD Stats (computed in Java to avoid SDN multi-column mapping issues)
+
+    public long countRelationships() {
+        List<Person> all = personRepository.findAll();
+        long total = 0;
+        for (Person p : all) {
+            total += p.getTeammates().size();
+        }
+        return total / 2;
+    }
+
+    public List<Person> getPeopleWithNoTeammates() {
+        return personRepository.findPeopleWithNoTeammates();
+    }
+
+    public List<Map<String, Object>> getConnectionCounts() {
+        List<Person> all = personRepository.findAll();
+        return all.stream()
+            .map(p -> Map.<String, Object>of(
+                "name", p.getName(),
+                "connections", (long) p.getTeammates().size()
+            ))
+            .sorted((a, b) -> Long.compare((Long) b.get("connections"), (Long) a.get("connections")))
+            .toList();
+    }
+
+    public List<Map<String, Object>> getRoleDistribution() {
+        List<Person> all = personRepository.findAll();
+        LinkedHashMap<String, Long> roleCounts = new LinkedHashMap<>();
+        for (Person p : all) {
+            String role = p.getRole();
+            if (role != null && !role.isEmpty()) {
+                roleCounts.merge(role, 1L, Long::sum);
+            }
+        }
+        return roleCounts.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .map(e -> Map.<String, Object>of("role", e.getKey(), "count", e.getValue()))
+            .toList();
+    }
+
+    // GRAPH Queries
+
+    public List<Person> getShortestPath(Long fromId, Long toId) {
+        // BFS in Java — more reliable than SDN Cypher mapping for path queries
+        List<Person> all = personRepository.findAll();
+        Map<Long, Person> peopleMap = new LinkedHashMap<>();
+        for (Person p : all) { peopleMap.put(p.getId(), p); }
+
+        if (!peopleMap.containsKey(fromId) || !peopleMap.containsKey(toId)) return List.of();
+
+        // BFS
+        Map<Long, Long> parentMap = new LinkedHashMap<>();
+        java.util.Queue<Long> queue = new java.util.LinkedList<>();
+        Set<Long> visited = new HashSet<>();
+        queue.add(fromId);
+        visited.add(fromId);
+        parentMap.put(fromId, null);
+
+        while (!queue.isEmpty()) {
+            Long current = queue.poll();
+            if (current.equals(toId)) break;
+            Person p = peopleMap.get(current);
+            if (p == null) continue;
+            for (Person t : p.getTeammates()) {
+                if (!visited.contains(t.getId()) && peopleMap.containsKey(t.getId())) {
+                    visited.add(t.getId());
+                    parentMap.put(t.getId(), current);
+                    queue.add(t.getId());
+                }
+            }
+        }
+
+        if (!parentMap.containsKey(toId)) return List.of();
+
+        // Reconstruct path
+        java.util.LinkedList<Person> path = new java.util.LinkedList<>();
+        Long step = toId;
+        while (step != null) {
+            path.addFirst(peopleMap.get(step));
+            step = parentMap.get(step);
+        }
+        return path;
+    }
+
+    public Integer getDegreesOfSeparation(Long fromId, Long toId) {
+        List<Person> path = getShortestPath(fromId, toId);
+        return path.isEmpty() ? null : path.size() - 1;
+    }
+
+    public List<Map<String, Object>> getSuggestedConnections(Long personId) {
+        Person person = personRepository.findById(personId).orElse(null);
+        if (person == null) return List.of();
+
+        Set<Long> myTeammateIds = new HashSet<>();
+        for (Person t : person.getTeammates()) {
+            myTeammateIds.add(t.getId());
+        }
+
+        // Friends-of-friends: people connected to my teammates but not to me
+        LinkedHashMap<Long, Map.Entry<Person, Long>> suggestions = new LinkedHashMap<>();
+        for (Person teammate : person.getTeammates()) {
+            // Reload to get their teammates
+            Person fullTeammate = personRepository.findById(teammate.getId()).orElse(null);
+            if (fullTeammate == null) continue;
+            for (Person fof : fullTeammate.getTeammates()) {
+                if (fof.getId().equals(personId) || myTeammateIds.contains(fof.getId())) continue;
+                suggestions.merge(fof.getId(),
+                    Map.entry(fof, 1L),
+                    (old, v) -> Map.entry(old.getKey(), old.getValue() + 1));
+            }
+        }
+
+        return suggestions.values().stream()
+            .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+            .limit(5)
+            .map(e -> Map.<String, Object>of(
+                "id", e.getKey().getId(),
+                "name", e.getKey().getName(),
+                "mutualFriends", e.getValue()
+            ))
+            .toList();
     }
 
     /**

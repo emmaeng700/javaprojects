@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Team Manager - Graph')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('graph')}"></nav>
+<div class="container-wide">
+
+    <h1>Team Graph</h1>
+    <p class="subtitle">Interactive visualization of team relationships — drag, zoom, click nodes</p>
+
+    <!-- Shortest Path Finder -->
+    <div class="card">
+        <h2>Find Shortest Path</h2>
+        <div class="path-finder">
+            <select id="fromPerson"><option value="">From...</option></select>
+            <span style="color:#888;">to</span>
+            <select id="toPerson"><option value="">To...</option></select>
+            <button class="btn btn-primary" onclick="findPath()">Find Path</button>
+            <button class="btn btn-secondary" onclick="resetHighlight()">Reset</button>
+        </div>
+        <div class="path-result" id="pathResult"></div>
+    </div>
+
+    <!-- Graph -->
+    <div class="graph-container">
+        <div id="network"></div>
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <button class="close-btn" onclick="document.getElementById('detailPanel').classList.remove('visible');">&times;</button>
+            <h3 id="panelName"></h3>
+            <div style="margin-top:8px;">
+                <div class="detail-row"><span class="detail-label">Role</span><span id="panelRole"></span></div>
+                <div class="detail-row"><span class="detail-label">Email</span><span id="panelEmail"></span></div>
+                <div class="detail-row"><span class="detail-label">Teammates</span><span id="panelTeammates"></span></div>
+            </div>
+            <a id="panelLink" class="btn btn-primary btn-sm" style="margin-top:12px;" href="#">View Profile</a>
+        </div>
+        <!-- Legend -->
+        <div class="graph-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#4361ee;"></span> Developer</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#7209b7;"></span> Designer</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f72585;"></span> Manager</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#4cc9f0;"></span> QA</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#4895ef;"></span> DevOps</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#6c757d;"></span> Other</div>
+            <div class="legend-item" style="margin-left:auto; color:#888; font-size:12px;">Node size = connection count</div>
+        </div>
+    </div>
+</div>
+
+<!-- vis.js -->
+<link href="https://unpkg.com/vis-network/styles/vis-network.min.css" rel="stylesheet"/>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script>
+var network = null;
+var nodesDataSet = null;
+var edgesDataSet = null;
+var graphNodes = [];
+
+var roleColors = {
+    'Developer': '#4361ee',
+    'Designer': '#7209b7',
+    'Manager': '#f72585',
+    'QA': '#4cc9f0',
+    'DevOps': '#4895ef'
+};
+var defaultColor = '#6c757d';
+
+fetch('/api/graph')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        graphNodes = data.nodes;
+
+        // Populate path finder dropdowns
+        var fromSelect = document.getElementById('fromPerson');
+        var toSelect = document.getElementById('toPerson');
+        data.nodes.forEach(function(n) {
+            var opt1 = new Option(n.label, n.id);
+            var opt2 = new Option(n.label, n.id);
+            fromSelect.add(opt1);
+            toSelect.add(opt2);
+        });
+
+        var nodes = data.nodes.map(function(n) {
+            var color = roleColors[n.role] || defaultColor;
+            return {
+                id: n.id,
+                label: n.label,
+                color: { background: color, border: color, highlight: { background: color, border: '#333' } },
+                size: 18 + (n.teammateCount * 6),
+                font: { size: 14, color: '#333', face: 'sans-serif' },
+                shape: 'dot',
+                borderWidth: 2,
+                shadow: true
+            };
+        });
+
+        var edges = data.edges.map(function(e) {
+            return {
+                from: e.from,
+                to: e.to,
+                color: { color: '#ccc', highlight: '#4361ee', opacity: 0.8 },
+                width: 2,
+                smooth: { type: 'continuous' }
+            };
+        });
+
+        nodesDataSet = new vis.DataSet(nodes);
+        edgesDataSet = new vis.DataSet(edges);
+
+        network = new vis.Network(
+            document.getElementById('network'),
+            { nodes: nodesDataSet, edges: edgesDataSet },
+            {
+                physics: {
+                    barnesHut: {
+                        gravitationalConstant: -3000,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    },
+                    stabilization: { iterations: 150 }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    zoomView: true,
+                    dragView: true
+                }
+            }
+        );
+
+        // Click handler - show detail panel
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                var nodeId = params.nodes[0];
+                var nodeData = graphNodes.find(function(n) { return n.id === nodeId; });
+                if (nodeData) {
+                    document.getElementById('panelName').textContent = nodeData.label;
+                    document.getElementById('panelRole').textContent = nodeData.role;
+                    document.getElementById('panelEmail').textContent = nodeData.email || 'Not set';
+                    document.getElementById('panelTeammates').textContent = nodeData.teammateCount;
+                    document.getElementById('panelLink').href = '/people/' + nodeId;
+                    document.getElementById('detailPanel').classList.add('visible');
+                }
+            } else {
+                document.getElementById('detailPanel').classList.remove('visible');
+            }
+        });
+
+        // Empty state
+        if (data.nodes.length === 0) {
+            document.getElementById('network').innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;">' +
+                '<div style="text-align:center;"><p>No data yet.</p>' +
+                '<a href="/dashboard" class="btn btn-primary" style="margin-top:12px;">Go to Dashboard to load demo data</a></div></div>';
+        }
+    });
+
+function findPath() {
+    var fromId = document.getElementById('fromPerson').value;
+    var toId = document.getElementById('toPerson').value;
+    if (!fromId || !toId) { alert('Select both people'); return; }
+    if (fromId === toId) { alert('Select two different people'); return; }
+
+    fetch('/api/shortest-path?from=' + fromId + '&to=' + toId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var resultDiv = document.getElementById('pathResult');
+            if (!data.found || data.path.length === 0) {
+                resultDiv.className = 'path-result visible';
+                resultDiv.style.background = '#fff3cd';
+                resultDiv.innerHTML = '<strong>No path found!</strong> These people are not connected.';
+                return;
+            }
+
+            // Show path text
+            resultDiv.className = 'path-result visible';
+            resultDiv.style.background = '#e8f5e9';
+            var html = '<strong>' + data.degrees + ' degree(s) of separation</strong>';
+            html += '<div class="path-nodes">';
+            data.path.forEach(function(n, i) {
+                if (i > 0) html += '<span class="path-arrow">&#8594;</span>';
+                html += '<span class="path-node">' + n.name + '</span>';
+            });
+            html += '</div>';
+            resultDiv.innerHTML = html;
+
+            // Highlight path on graph
+            var pathIds = data.path.map(function(n) { return n.id; });
+            highlightPath(pathIds);
+        });
+}
+
+function highlightPath(pathIds) {
+    // Dim all nodes
+    nodesDataSet.forEach(function(node) {
+        var isInPath = pathIds.indexOf(node.id) >= 0;
+        nodesDataSet.update({
+            id: node.id,
+            opacity: isInPath ? 1.0 : 0.15,
+            font: { color: isInPath ? '#333' : '#ccc' }
+        });
+    });
+
+    // Highlight path edges
+    edgesDataSet.forEach(function(edge) {
+        var fromInPath = pathIds.indexOf(edge.from) >= 0;
+        var toInPath = pathIds.indexOf(edge.to) >= 0;
+        var fi = pathIds.indexOf(edge.from);
+        var ti = pathIds.indexOf(edge.to);
+        var isPathEdge = fromInPath && toInPath && Math.abs(fi - ti) === 1;
+        edgesDataSet.update({
+            id: edge.id,
+            color: { color: isPathEdge ? '#28a745' : '#eee', opacity: isPathEdge ? 1.0 : 0.1 },
+            width: isPathEdge ? 4 : 1
+        });
+    });
+
+    // Focus on path
+    network.fit({ nodes: pathIds, animation: { duration: 500 } });
+}
+
+function resetHighlight() {
+    document.getElementById('pathResult').className = 'path-result';
+    // Restore all nodes
+    nodesDataSet.forEach(function(node) {
+        var orig = graphNodes.find(function(n) { return n.id === node.id; });
+        var color = orig ? (roleColors[orig.role] || defaultColor) : defaultColor;
+        nodesDataSet.update({
+            id: node.id,
+            opacity: 1.0,
+            font: { size: 14, color: '#333' },
+            color: { background: color, border: color }
+        });
+    });
+    edgesDataSet.forEach(function(edge) {
+        edgesDataSet.update({
+            id: edge.id,
+            color: { color: '#ccc', highlight: '#4361ee', opacity: 0.8 },
+            width: 2
+        });
+    });
+    network.fit({ animation: { duration: 500 } });
+}
+</script>
+</body>
+</html>

@@ -33,7 +33,7 @@ public class PersonController {
      */
     @GetMapping
     public String index() {
-        return "redirect:/people";
+        return "redirect:/dashboard";
     }
 
     /**
