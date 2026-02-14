@@ -391,6 +391,18 @@ tr:hover td { background: #f8f9fa; }
 /* === Empty State === */
 .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
 
+/* === AJAX Validation Status === */
+.ajax-status {
+    font-size: 12px; margin-top: 4px; font-weight: 500;
+    transition: color 0.2s;
+}
+.ajax-status.valid { color: #10b981; }
+.ajax-status.invalid { color: var(--error-text); }
+.form-control.is-valid {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+
 /* === Error Pages === */
 .error-page { text-align: center; padding: 60px 32px; }
 .error-code {

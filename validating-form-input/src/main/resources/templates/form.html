@@ -132,6 +132,55 @@ document.getElementById('password').addEventListener('input', function() {
     else { bar.className = 'strength-bar strong'; text.textContent = 'Strong'; }
     if (val.length === 0) { bar.style.width = '0'; text.textContent = 'Uppercase + lowercase + digit required'; }
 });
+
+// --- Real-time AJAX validation ---
+let debounceTimers = {};
+function debounce(fieldId, fn, delay) {
+    clearTimeout(debounceTimers[fieldId]);
+    debounceTimers[fieldId] = setTimeout(fn, delay);
+}
+
+function showFieldStatus(fieldId, valid, message) {
+    const input = document.getElementById(fieldId);
+    let statusEl = input.closest('.form-group').querySelector('.ajax-status');
+    if (!statusEl) {
+        statusEl = document.createElement('p');
+        statusEl.className = 'ajax-status';
+        input.closest('.form-group').appendChild(statusEl);
+    }
+    statusEl.textContent = message;
+    statusEl.className = 'ajax-status ' + (valid ? 'valid' : 'invalid');
+    input.classList.toggle('is-valid', valid);
+}
+
+document.getElementById('name').addEventListener('input', function() {
+    const val = this.value;
+    if (val.length === 0) return;
+    debounce('name', () => {
+        fetch('/api/validate/name?name=' + encodeURIComponent(val))
+            .then(r => r.json())
+            .then(d => showFieldStatus('name', d.valid, d.message));
+    }, 400);
+});
+
+document.getElementById('email').addEventListener('input', function() {
+    const val = this.value;
+    if (val.length === 0) return;
+    debounce('email', () => {
+        fetch('/api/validate/email?email=' + encodeURIComponent(val))
+            .then(r => r.json())
+            .then(d => showFieldStatus('email', d.valid && d.available, d.message));
+    }, 500);
+});
+
+document.getElementById('phone').addEventListener('input', function() {
+    const val = this.value;
+    debounce('phone', () => {
+        fetch('/api/validate/phone?phone=' + encodeURIComponent(val))
+            .then(r => r.json())
+            .then(d => showFieldStatus('phone', d.valid, d.message));
+    }, 400);
+});
 </script>
 <script th:replace="~{fragments/layout :: themeScript}"></script>
 
