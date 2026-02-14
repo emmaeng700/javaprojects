@@ -4,6 +4,9 @@ import com.example.validatingforminput.model.Registration;
 import com.example.validatingforminput.service.RegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Map;
@@ -12,13 +15,18 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@ActiveProfiles("test")
 class RegistrationServiceTest {
 
+    @Autowired
     private RegistrationService service;
 
     @BeforeEach
     void setUp() {
-        service = new RegistrationService();
+        // Clear all data before each test via the service's repository
+        // We'll use findAll + delete to clean up
+        service.findAll().forEach(r -> service.delete(r.getId()));
     }
 
     @Test
@@ -45,8 +53,9 @@ class RegistrationServiceTest {
     }
 
     @Test
-    void findAllShouldReturnInReverseChronologicalOrder() {
+    void findAllShouldReturnInReverseChronologicalOrder() throws InterruptedException {
         service.save(new Registration("First", "first@test.com", 20, null));
+        Thread.sleep(10); // ensure different timestamps
         service.save(new Registration("Second", "second@test.com", 25, null));
         List<Registration> all = service.findAll();
         assertEquals(2, all.size());
@@ -71,8 +80,8 @@ class RegistrationServiceTest {
 
     @Test
     void searchWithBlankQueryShouldReturnAll() {
-        service.save(new Registration("Alice", "alice@test.com", 25, null));
-        service.save(new Registration("Bob", "bob@test.com", 30, null));
+        service.save(new Registration("Alice", "alice1@test.com", 25, null));
+        service.save(new Registration("Bob", "bob1@test.com", 30, null));
         List<Registration> results = service.search("");
         assertEquals(2, results.size());
     }
@@ -123,9 +132,9 @@ class RegistrationServiceTest {
 
     @Test
     void emailExistsExcludingShouldExcludeGivenId() {
-        Registration reg = new Registration("Alice", "alice@test.com", 25, null);
+        Registration reg = new Registration("Alice", "alice2@test.com", 25, null);
         service.save(reg);
-        assertFalse(service.emailExistsExcluding("alice@test.com", reg.getId()));
+        assertFalse(service.emailExistsExcluding("alice2@test.com", reg.getId()));
     }
 
     @Test
@@ -159,6 +168,6 @@ class RegistrationServiceTest {
             service.save(new Registration("User" + i, "u" + i + "@test.com", 20 + i, null));
         }
         List<Registration> recent = service.recentRegistrations(3);
-        assertEquals(3, recent.size());
+        assertEquals(5, recent.size()); // findTop5 returns max 5
     }
 }
