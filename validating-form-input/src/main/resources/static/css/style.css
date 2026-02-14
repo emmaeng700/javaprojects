@@ -1,25 +1,27 @@
 /* === CSS Custom Properties === */
 :root {
-    --primary: #5a7d9a;
-    --primary-hover: #4a6a84;
-    --dark: #2c3e50;
-    --danger: #c0392b;
-    --danger-hover: #a93226;
-    --secondary: #7f8c8d;
-    --secondary-hover: #6c7a7b;
-    --success-bg: #e8f5e9;
-    --success-text: #2e7d32;
-    --success-border: #a5d6a7;
+    --primary: #e08850;
+    --primary-hover: #c9743f;
+    --accent-green: #5dba7d;
+    --accent-green-hover: #4da86b;
+    --dark: #2d3748;
+    --danger: #e25c5c;
+    --danger-hover: #cf4a4a;
+    --secondary: #718096;
+    --secondary-hover: #5f7083;
+    --success-bg: #ecfdf5;
+    --success-text: #166534;
+    --success-border: #86efac;
     --error-bg: #fef2f2;
     --error-text: #b91c1c;
     --error-border: #fca5a5;
-    --bg: #f0f2f5;
+    --bg: #faf8f6;
     --card-bg: #fff;
-    --border: #e5e7eb;
+    --border: #e8e5e1;
     --text: #374151;
-    --text-muted: #9ca3af;
+    --text-muted: #8b8680;
     --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 /* === Dark Mode === */
@@ -37,14 +39,14 @@ body.dark-mode {
     --success-bg: #1c3b2a;
     --success-text: #86efac;
 }
-body.dark-mode .navbar { background: #0f172a; }
+body.dark-mode .navbar { background: #1a2332; }
 body.dark-mode .form-control {
     background: #1e293b;
     border-color: #475569;
     color: #e2e8f0;
 }
 body.dark-mode .form-control::placeholder { color: #64748b; }
-body.dark-mode th { background: #0f172a; }
+body.dark-mode th { background: #1a2332; }
 body.dark-mode tr:hover td { background: #1e293b; }
 body.dark-mode .search-form input {
     background: #1e293b;
@@ -66,8 +68,7 @@ a:hover { text-decoration: underline; }
 
 /* === Navigation === */
 .navbar {
-    background: var(--dark);
-    background: #2c3e50;
+    background: #34495e;
     padding: 0 24px;
     display: flex;
     align-items: center;
@@ -110,7 +111,7 @@ a:hover { text-decoration: underline; }
 }
 .navbar-nav a.active {
     color: #fff;
-    border-bottom-color: var(--primary);
+    border-bottom-color: #f0a672;
 }
 .theme-toggle {
     background: none;
@@ -180,7 +181,7 @@ h2 { color: var(--dark); font-size: 18px; margin-bottom: 12px; }
 .form-control:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(90,125,154,0.15);
+    box-shadow: 0 0 0 3px rgba(224,136,80,0.15);
 }
 .form-control.is-invalid {
     border-color: var(--danger);
@@ -272,6 +273,8 @@ h2 { color: var(--dark); font-size: 18px; margin-bottom: 12px; }
 .btn-primary:hover { background: var(--primary-hover); color: #fff; }
 .btn-danger { background: var(--danger); }
 .btn-danger:hover { background: var(--danger-hover); color: #fff; }
+.btn-success { background: var(--accent-green); }
+.btn-success:hover { background: var(--accent-green-hover); color: #fff; }
 .btn-secondary { background: var(--secondary); }
 .btn-secondary:hover { background: var(--secondary-hover); color: #fff; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
@@ -288,9 +291,9 @@ table {
     border: 1px solid var(--border);
 }
 th, td { padding: 12px 16px; text-align: left; font-size: 14px; }
-th { background: #2c3e50; color: #fff; font-weight: 500; }
+th { background: #34495e; color: #fff; font-weight: 500; }
 tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
-tr:hover td { background: #f8f9fa; }
+tr:hover td { background: #fdf6f0; }
 .actions { white-space: nowrap; }
 .actions a, .actions form { margin-right: 6px; display: inline-block; }
 
@@ -311,8 +314,8 @@ tr:hover td { background: #f8f9fa; }
     transition: transform 0.2s;
 }
 .stat-card:hover { transform: translateY(-2px); }
-.stat-card.accent-green { border-left-color: #10b981; }
-.stat-card.accent-purple { border-left-color: #8b5cf6; }
+.stat-card.accent-green { border-left-color: var(--accent-green); }
+.stat-card.accent-purple { border-left-color: #d4a05a; }
 .stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--dark); line-height: 1; }
 .stat-card .stat-label {
     font-size: 12px; color: var(--text-muted); margin-top: 4px;
@@ -328,7 +331,7 @@ tr:hover td { background: #f8f9fa; }
     border-radius: 5px; overflow: hidden;
 }
 .chart-bar-fill {
-    height: 100%; background: var(--primary);
+    height: 100%; background: linear-gradient(90deg, var(--primary), #f0a672);
     border-radius: 5px; transition: width 0.5s ease;
     min-width: 2px;
 }
@@ -350,7 +353,7 @@ tr:hover td { background: #f8f9fa; }
 }
 .search-form input:focus {
     outline: none; border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(90,125,154,0.15);
+    box-shadow: 0 0 0 3px rgba(224,136,80,0.15);
 }
 .count { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
 
@@ -370,16 +373,18 @@ tr:hover td { background: #f8f9fa; }
     display: inline-block; padding: 2px 8px;
     border-radius: 12px; font-size: 11px; font-weight: 600;
 }
-.badge-primary { background: rgba(90,125,154,0.15); color: var(--primary); }
+.badge-primary { background: rgba(93,186,125,0.15); color: var(--accent-green); }
 
 /* === Success Card === */
 .success-card { text-align: center; padding: 48px 32px; }
 .success-icon {
-    width: 64px; height: 64px; border-radius: 50%;
-    background: var(--success-bg); color: var(--success-text);
-    font-size: 28px; font-weight: 700;
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    color: var(--accent-green);
+    font-size: 32px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 20px;
+    box-shadow: 0 4px 12px rgba(93,186,125,0.2);
 }
 .success-card h1 { margin-bottom: 12px; }
 .success-message { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; line-height: 1.5; }
@@ -396,11 +401,11 @@ tr:hover td { background: #f8f9fa; }
     font-size: 12px; margin-top: 4px; font-weight: 500;
     transition: color 0.2s;
 }
-.ajax-status.valid { color: #10b981; }
+.ajax-status.valid { color: var(--accent-green); }
 .ajax-status.invalid { color: var(--error-text); }
 .form-control.is-valid {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(93,186,125,0.12);
 }
 
 /* === Error Pages === */
