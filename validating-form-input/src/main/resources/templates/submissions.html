@@ -17,6 +17,7 @@
                 <button type="submit" class="btn btn-primary">Search</button>
                 <a th:if="${searchQuery}" th:href="@{/submissions}" class="btn btn-secondary">Clear</a>
             </form>
+            <a th:href="@{/submissions/export}" class="btn btn-secondary">Export CSV</a>
             <a th:href="@{/}" class="btn btn-primary">+ New Registration</a>
         </div>
     </div>
