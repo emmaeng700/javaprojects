@@ -2,16 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head th:replace="~{fragments/layout :: head('Registration Success')}"></head>
 <body>
-<nav th:replace="~{fragments/layout :: nav}"></nav>
+<nav th:replace="~{fragments/layout :: nav('register')}"></nav>
 
 <div class="container">
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
     <div class="success-card card">
         <div class="success-icon">&#10003;</div>
         <h1>Registration Successful</h1>
         <p class="success-message">Congratulations! You are old enough to sign up for this site.</p>
-        <a th:href="@{/}" class="btn btn-primary">Register Another</a>
+        <div class="success-actions">
+            <a th:href="@{/}" class="btn btn-primary">Register Another</a>
+            <a th:href="@{/submissions}" class="btn btn-secondary">View All Submissions</a>
+            <a th:href="@{/dashboard}" class="btn btn-secondary">Go to Dashboard</a>
+        </div>
     </div>
 </div>
 
+<script th:replace="~{fragments/layout :: themeScript}"></script>
 </body>
 </html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+
+<div class="container-wide">
+    <div class="page-header">
+        <h1>Dashboard</h1>
+        <p class="subtitle">Registration overview and analytics</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" th:text="${totalRegistrations}">0</div>
+            <div class="stat-label">Total Registrations</div>
+        </div>
+        <div class="stat-card accent-green">
+            <div class="stat-value" th:text="${averageAge}">0</div>
+            <div class="stat-label">Average Age</div>
+        </div>
+        <div class="stat-card accent-purple" th:each="entry : ${ageDistribution}" th:if="${entryStat.index < 2}">
+            <div class="stat-value" th:text="${entry.value}">0</div>
+            <div class="stat-label" th:text="'Age ' + ${entry.key}">Age Range</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Age Distribution -->
+        <div class="card">
+            <h2>Age Distribution</h2>
+            <div class="chart-bars">
+                <div class="chart-bar-row" th:each="entry : ${ageDistribution}">
+                    <span class="chart-label" th:text="${entry.key}">18-25</span>
+                    <div class="chart-bar-track">
+                        <div class="chart-bar-fill"
+                             th:style="'width:' + (${totalRegistrations > 0} ? (${entry.value} * 100 / ${totalRegistrations}) : 0) + '%'">
+                        </div>
+                    </div>
+                    <span class="chart-count" th:text="${entry.value}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Registrations -->
+        <div class="card">
+            <h2>Recent Registrations</h2>
+            <div th:if="${#lists.isEmpty(recentRegistrations)}" class="empty-state">
+                <p>No registrations yet.</p>
+                <a th:href="@{/}" class="btn btn-primary" style="margin-top:12px;">Register First User</a>
+            </div>
+            <div class="recent-list" th:unless="${#lists.isEmpty(recentRegistrations)}">
+                <div class="recent-item" th:each="reg : ${recentRegistrations}">
+                    <div class="recent-info">
+                        <strong th:text="${reg.name}">Name</strong>
+                        <span class="recent-email" th:text="${reg.email}">email</span>
+                    </div>
+                    <div class="recent-meta">
+                        <span class="badge badge-primary" th:text="'Age ' + ${reg.age}">Age</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>

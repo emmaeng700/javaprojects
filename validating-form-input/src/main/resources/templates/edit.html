@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Edit Registration')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('submissions')}"></nav>
+
+<div class="container">
+    <a class="back-link" th:href="@{/submissions}">&larr; Back to submissions</a>
+
+    <div class="page-header">
+        <h1>Edit Registration</h1>
+        <p class="subtitle">Update the registration details below.</p>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/submissions/{id}/edit(id=${registrationId})}"
+              th:object="${personForm}" method="post" novalidate>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" class="form-control"
+                           th:field="*{name}"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                           placeholder="John Doe">
+                    <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" class="form-control"
+                           th:field="*{email}"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                           placeholder="john@example.com">
+                    <p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Age *</label>
+                    <input type="number" id="age" class="form-control"
+                           th:field="*{age}"
+                           th:classappend="${#fields.hasErrors('age')} ? 'is-invalid'"
+                           placeholder="25" min="18" max="150">
+                    <p class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age error</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-control"
+                           th:field="*{phone}"
+                           th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                           placeholder="+1-555-123-4567">
+                    <p class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Phone error</p>
+                </div>
+            </div>
+
+            <!-- Password fields hidden with defaults for edit mode -->
+            <input type="hidden" th:field="*{password}" th:value="'Placeholder1'">
+            <input type="hidden" th:field="*{confirmPassword}" th:value="'Placeholder1'">
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Update Registration</button>
+                <a th:href="@{/submissions}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>

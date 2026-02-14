@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Submissions')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('submissions')}"></nav>
+
+<div class="container-wide">
+    <div class="top-bar">
+        <div>
+            <h1>Submissions</h1>
+            <span class="count" th:text="${totalCount} + ' total registrations'">0 total</span>
+        </div>
+        <div class="top-bar-actions">
+            <form class="search-form" th:action="@{/submissions}" method="get">
+                <input type="text" name="search" placeholder="Search by name, email, phone..."
+                       th:value="${searchQuery}">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <a th:if="${searchQuery}" th:href="@{/submissions}" class="btn btn-secondary">Clear</a>
+            </form>
+            <a th:href="@{/}" class="btn btn-primary">+ New Registration</a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div th:if="${#lists.isEmpty(registrations)}" class="empty-state card">
+        <p th:if="${searchQuery}">No results found for "<span th:text="${searchQuery}"></span>"</p>
+        <p th:unless="${searchQuery}">No registrations yet. <a th:href="@{/}">Create one</a>.</p>
+    </div>
+
+    <table th:unless="${#lists.isEmpty(registrations)}">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Age</th>
+                <th>Phone</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="reg : ${registrations}">
+                <td th:text="${reg.id}">1</td>
+                <td th:text="${reg.name}">Name</td>
+                <td th:text="${reg.email}">email</td>
+                <td th:text="${reg.age}">25</td>
+                <td th:text="${reg.phone != null ? reg.phone : '-'}">-</td>
+                <td th:text="${#temporals.format(reg.createdAt, 'MMM dd, HH:mm')}">Jan 01, 12:00</td>
+                <td class="actions">
+                    <a th:href="@{/submissions/{id}/edit(id=${reg.id})}" class="btn btn-sm btn-secondary">Edit</a>
+                    <form th:action="@{/submissions/{id}/delete(id=${reg.id})}" method="post" style="display:inline;"
+                          onsubmit="return confirm('Delete this registration?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>

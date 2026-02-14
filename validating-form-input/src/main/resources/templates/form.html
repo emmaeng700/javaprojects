@@ -133,6 +133,7 @@ document.getElementById('password').addEventListener('input', function() {
     if (val.length === 0) { bar.style.width = '0'; text.textContent = 'Uppercase + lowercase + digit required'; }
 });
 </script>
+<script th:replace="~{fragments/layout :: themeScript}"></script>
 
 </body>
 </html>
