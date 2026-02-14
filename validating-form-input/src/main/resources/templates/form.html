@@ -2,44 +2,137 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head th:replace="~{fragments/layout :: head('Registration Form')}"></head>
 <body>
-<nav th:replace="~{fragments/layout :: nav}"></nav>
+<nav th:replace="~{fragments/layout :: nav('register')}"></nav>
 
 <div class="container">
     <div class="page-header">
         <h1>Registration Form</h1>
-        <p class="subtitle">Please enter your name and age to sign up.</p>
+        <p class="subtitle">Create your account. All fields marked with * are required.</p>
     </div>
 
     <div class="card">
         <form action="#" th:action="@{/}" th:object="${personForm}" method="post" novalidate>
 
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" class="form-control"
-                       th:field="*{name}"
-                       th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
-                       placeholder="Enter your name">
-                <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</p>
-                <p class="field-hint">Between 2 and 30 characters</p>
+            <!-- Global error (e.g. password mismatch) -->
+            <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
             </div>
 
-            <div class="form-group">
-                <label for="age">Age</label>
-                <input type="number" id="age" class="form-control"
-                       th:field="*{age}"
-                       th:classappend="${#fields.hasErrors('age')} ? 'is-invalid'"
-                       placeholder="Enter your age">
-                <p class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age error</p>
-                <p class="field-hint">Must be at least 18</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" class="form-control"
+                           th:field="*{name}"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                           placeholder="John Doe">
+                    <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</p>
+                    <p class="field-hint">2-30 characters</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" class="form-control"
+                           th:field="*{email}"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                           placeholder="john@example.com">
+                    <p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Age *</label>
+                    <input type="number" id="age" class="form-control"
+                           th:field="*{age}"
+                           th:classappend="${#fields.hasErrors('age')} ? 'is-invalid'"
+                           placeholder="25" min="18" max="150">
+                    <p class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age error</p>
+                    <p class="field-hint">Must be 18 or older</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-control"
+                           th:field="*{phone}"
+                           th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                           placeholder="+1-555-123-4567">
+                    <p class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Phone error</p>
+                    <p class="field-hint">Optional</p>
+                </div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="form-control"
+                               th:field="*{password}"
+                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
+                               placeholder="Min 8 characters">
+                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">Show</button>
+                    </div>
+                    <p class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</p>
+                    <div class="password-strength" id="strength-meter">
+                        <div class="strength-bar" id="strength-bar"></div>
+                    </div>
+                    <p class="field-hint" id="strength-text">Uppercase + lowercase + digit required</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" class="form-control"
+                               th:field="*{confirmPassword}"
+                               th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid'"
+                               placeholder="Re-enter password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">Show</button>
+                    </div>
+                    <p class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Confirm error</p>
+                </div>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
                 <button type="reset" class="btn btn-secondary">Reset</button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+    }
+}
+
+document.getElementById('password').addEventListener('input', function() {
+    const val = this.value;
+    const bar = document.getElementById('strength-bar');
+    const text = document.getElementById('strength-text');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[a-z]/.test(val)) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/\d/.test(val)) score++;
+    if (/[^a-zA-Z0-9]/.test(val)) score++;
+
+    const pct = (score / 5) * 100;
+    bar.style.width = pct + '%';
+    if (score <= 1) { bar.className = 'strength-bar weak'; text.textContent = 'Weak'; }
+    else if (score <= 2) { bar.className = 'strength-bar fair'; text.textContent = 'Fair'; }
+    else if (score <= 3) { bar.className = 'strength-bar good'; text.textContent = 'Good'; }
+    else { bar.className = 'strength-bar strong'; text.textContent = 'Strong'; }
+    if (val.length === 0) { bar.style.width = '0'; text.textContent = 'Uppercase + lowercase + digit required'; }
+});
+</script>
 
 </body>
 </html>

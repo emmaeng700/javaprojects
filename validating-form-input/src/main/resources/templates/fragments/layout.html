@@ -10,14 +10,36 @@
 </head>
 
 <!-- Navigation Fragment -->
-<nav th:fragment="nav" class="navbar">
-    <a class="navbar-brand" th:href="@{/}">
+<nav th:fragment="nav(active)" class="navbar">
+    <a class="navbar-brand" th:href="@{/dashboard}">
         &#9679; Form Validator
     </a>
     <ul class="navbar-nav">
-        <li><a th:href="@{/}">Register</a></li>
-        <li><a th:href="@{/results}">Results</a></li>
+        <li><a th:href="@{/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a></li>
+        <li><a th:href="@{/}" th:classappend="${active == 'register'} ? 'active'">Register</a></li>
+        <li><a th:href="@{/submissions}" th:classappend="${active == 'submissions'} ? 'active'">Submissions</a></li>
     </ul>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9790;</button>
 </nav>
+
+<!-- Alerts Fragment -->
+<div th:fragment="alerts">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+</div>
+
+<!-- Theme Script Fragment -->
+<script th:fragment="themeScript">
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+}
+(function() {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+})();
+</script>
 
 </html>
