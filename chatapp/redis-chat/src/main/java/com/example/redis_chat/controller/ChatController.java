@@ -1,6 +1,7 @@
 package com.example.redis_chat.controller;
 
 import com.example.redis_chat.model.ChatMessage;
+import com.example.redis_chat.service.MessageHistoryService;
 import com.example.redis_chat.service.RedisMessagePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @Controller
 public class ChatController {
@@ -19,6 +23,9 @@ public class ChatController {
 
     @Autowired
     private RedisMessagePublisher messagePublisher;
+
+    @Autowired
+    private MessageHistoryService messageHistoryService;
 
     @GetMapping("/")
     public String index() {
@@ -33,6 +40,14 @@ public class ChatController {
         model.addAttribute("room", room);
         logger.info("User {} joining room {}", username, room);
         return "chat";
+    }
+
+    @GetMapping("/api/messages/history")
+    @ResponseBody
+    public List<ChatMessage> getMessageHistory(@RequestParam String room, 
+                                                @RequestParam(defaultValue = "50") int limit) {
+        logger.info("Fetching message history for room: {}, limit: {}", room, limit);
+        return messageHistoryService.getMessageHistory(room, limit);
     }
 
     @MessageMapping("/chat.send")

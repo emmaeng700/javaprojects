@@ -386,6 +386,7 @@
         let stompClient = null;
         let isConnected = false;
 
+        
         function connect() {
             const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
@@ -396,6 +397,9 @@
         function onConnected() {
             isConnected = true;
             updateConnectionStatus(true);
+            
+            // Load message history first
+            loadMessageHistory();
             
             // Subscribe to the room
             stompClient.subscribe('/topic/messages/' + room, onMessageReceived);
@@ -508,6 +512,21 @@
                 statusElement.className = 'connection-status disconnected';
                 statusText.textContent = 'Disconnected';
             }
+        }
+
+        // Add this new function
+        function loadMessageHistory() {
+            fetch('/api/messages/history?room=' + room + '&limit=50')
+                .then(response => response.json())
+                .then(messages => {
+                    console.log('Loaded ' + messages.length + ' messages from history');
+                    messages.forEach(message => {
+                        displayMessage(message);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading message history:', error);
+                });
         }
 
         // Enter key to send message

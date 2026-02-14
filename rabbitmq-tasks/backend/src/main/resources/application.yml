@@ -1,0 +1,13 @@
+server:
+  port: 8080
+  # Optional: hide full stack traces from being returned to frontend on errors
+  error:
+    include-stacktrace: never
+
+spring:
+  rabbitmq:
+    host: localhost # 🟢 Correct for locally running backend
+    port: 5672
+    # Default credentials for official rabbitmq:3-management docker image
+    username: guest
+    password: guest
