@@ -22,14 +22,15 @@
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9790;</button>
 </nav>
 
-<!-- Alerts Fragment -->
+<!-- Alerts Fragment (now uses toast notifications) -->
 <div th:fragment="alerts">
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:attr="data-toast-msg=${success},data-toast-type='success'"></div>
+    <div th:if="${error}" class="alert alert-error" th:attr="data-toast-msg=${error},data-toast-type='error'"></div>
 </div>
 
 <!-- Theme Script Fragment -->
 <script th:fragment="themeScript">
+/* === Theme Toggle === */
 function toggleTheme() {
     const body = document.body;
     body.classList.toggle('dark-mode');
@@ -40,6 +41,65 @@ function toggleTheme() {
         document.body.classList.add('dark-mode');
     }
 })();
+
+/* === Toast Notification System === */
+(function() {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-' + type;
+        toast.style.position = 'relative';
+        toast.innerHTML =
+            '<span class="toast-icon">' + (type === 'success' ? '&#10003;' : '&#10007;') + '</span>' +
+            '<span class="toast-body">' + message + '</span>' +
+            '<button class="toast-close" onclick="this.parentElement.classList.add(\'removing\');setTimeout(()=>this.parentElement.remove(),300)">&times;</button>' +
+            '<div class="toast-progress"></div>';
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.classList.add('removing');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 4000);
+    }
+    document.querySelectorAll('.alert[data-toast-msg]').forEach(function(el) {
+        var msg = el.getAttribute('data-toast-msg');
+        var type = el.getAttribute('data-toast-type') || 'success';
+        if (msg) showToast(msg, type);
+    });
+    window.showToast = showToast;
+})();
+
+/* === Keyboard Shortcuts === */
+(function() {
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.altKey && e.key === 'n') { e.preventDefault(); window.location.href = '/'; }
+        if (e.altKey && e.key === 'd') { e.preventDefault(); window.location.href = '/dashboard'; }
+        if (e.altKey && e.key === 's') { e.preventDefault(); window.location.href = '/submissions'; }
+        if (e.altKey && e.key === 't') { e.preventDefault(); toggleTheme(); }
+        if (e.key === '?') {
+            var panel = document.querySelector('.shortcuts-panel');
+            if (panel) panel.classList.toggle('visible');
+        }
+    });
+})();
 </script>
+
+<!-- Keyboard Shortcuts Panel Fragment -->
+<div th:fragment="shortcuts">
+    <button class="shortcuts-toggle" onclick="document.querySelector('.shortcuts-panel').classList.toggle('visible')" title="Keyboard shortcuts (?)">?</button>
+    <div class="shortcuts-panel">
+        <h3>Keyboard Shortcuts</h3>
+        <div class="shortcut-row"><span>New Registration</span><span class="kbd">Alt+N</span></div>
+        <div class="shortcut-row"><span>Dashboard</span><span class="kbd">Alt+D</span></div>
+        <div class="shortcut-row"><span>Submissions</span><span class="kbd">Alt+S</span></div>
+        <div class="shortcut-row"><span>Toggle Dark Mode</span><span class="kbd">Alt+T</span></div>
+        <div class="shortcut-row"><span>Show Shortcuts</span><span class="kbd">?</span></div>
+    </div>
+</div>
 
 </html>

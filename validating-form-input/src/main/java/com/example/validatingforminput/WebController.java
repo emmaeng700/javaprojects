@@ -94,6 +94,8 @@ public class WebController {
 		form.setEmail(reg.getEmail());
 		form.setAge(reg.getAge());
 		form.setPhone(reg.getPhone());
+		form.setPassword("Placeholder1");
+		form.setConfirmPassword("Placeholder1");
 
 		model.addAttribute("personForm", form);
 		model.addAttribute("registrationId", id);

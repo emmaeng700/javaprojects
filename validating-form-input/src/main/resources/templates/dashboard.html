@@ -10,18 +10,46 @@
         <p class="subtitle">Registration overview and analytics</p>
     </div>
 
+    <!-- Achievement Badges -->
+    <div class="achievements">
+        <div th:classappend="${totalRegistrations >= 1} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#127942;</span>
+            <span>First User</span>
+        </div>
+        <div th:classappend="${totalRegistrations >= 5} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#11088;</span>
+            <span>5 Registered</span>
+        </div>
+        <div th:classappend="${totalRegistrations >= 10} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#128293;</span>
+            <span>10 Users!</span>
+        </div>
+        <div th:classappend="${totalRegistrations >= 25} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#127775;</span>
+            <span>25 Club</span>
+        </div>
+        <div th:classappend="${totalRegistrations >= 50} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#128142;</span>
+            <span>50 Legend</span>
+        </div>
+        <div th:classappend="${totalRegistrations >= 100} ? '' : 'locked'" class="achievement">
+            <span class="achievement-icon">&#128081;</span>
+            <span>100 Crown</span>
+        </div>
+    </div>
+
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value" th:text="${totalRegistrations}">0</div>
+            <div class="stat-value" data-count-to th:attr="data-target=${totalRegistrations}" th:text="${totalRegistrations}">0</div>
             <div class="stat-label">Total Registrations</div>
         </div>
         <div class="stat-card accent-green">
-            <div class="stat-value" th:text="${averageAge}">0</div>
+            <div class="stat-value" data-count-to th:attr="data-target=${averageAge}" th:text="${averageAge}">0</div>
             <div class="stat-label">Average Age</div>
         </div>
         <div class="stat-card accent-purple" th:each="entry : ${ageDistribution}" th:if="${entryStat.index < 2}">
-            <div class="stat-value" th:text="${entry.value}">0</div>
+            <div class="stat-value" data-count-to th:attr="data-target=${entry.value}" th:text="${entry.value}">0</div>
             <div class="stat-label" th:text="'Age ' + ${entry.key}">Age Range</div>
         </div>
     </div>
@@ -53,10 +81,15 @@
             <div class="recent-list" th:unless="${#lists.isEmpty(recentRegistrations)}">
                 <div class="recent-item" th:each="reg : ${recentRegistrations}">
                     <div class="recent-info">
-                        <strong th:text="${reg.name}">Name</strong>
-                        <span class="recent-email" th:text="${reg.email}">email</span>
+                        <div class="avatar avatar-sm" th:data-initial="${reg.name.substring(0,1)}"
+                             th:text="${reg.name.substring(0,1).toUpperCase()}">A</div>
+                        <div>
+                            <strong th:text="${reg.name}">Name</strong>
+                            <span class="recent-email" th:text="${reg.email}">email</span>
+                        </div>
                     </div>
                     <div class="recent-meta">
+                        <span class="recent-time" th:text="${#temporals.format(reg.createdAt, 'MMM dd')}">Jan 01</span>
                         <span class="badge badge-primary" th:text="'Age ' + ${reg.age}">Age</span>
                     </div>
                 </div>
@@ -65,6 +98,48 @@
     </div>
 </div>
 
+<!-- Animated Counter + Avatar Colors -->
+<script>
+(function() {
+    /* Animated counters */
+    var counters = document.querySelectorAll('[data-count-to]');
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    counters.forEach(function(el) { observer.observe(el); });
+
+    function animateCounter(el) {
+        var target = parseFloat(el.getAttribute('data-target')) || 0;
+        var isDecimal = String(target).includes('.');
+        var duration = 1200;
+        var start = performance.now();
+        function update(now) {
+            var elapsed = now - start;
+            var progress = Math.min(elapsed / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            var current = target * eased;
+            el.textContent = isDecimal ? current.toFixed(1) : Math.round(current);
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        el.textContent = isDecimal ? '0.0' : '0';
+        requestAnimationFrame(update);
+    }
+
+    /* Avatar colors from initials */
+    var palette = ['#e08850','#5dba7d','#3b82f6','#8b5cf6','#e25c5c','#f59e0b','#06b6d4','#ec4899','#14b8a6','#f97316'];
+    document.querySelectorAll('.avatar[data-initial]').forEach(function(el) {
+        var code = el.getAttribute('data-initial').charCodeAt(0);
+        el.style.background = palette[code % palette.length];
+    });
+})();
+</script>
+
+<div th:replace="~{fragments/layout :: shortcuts}"></div>
 <script th:replace="~{fragments/layout :: themeScript}"></script>
 </body>
 </html>

@@ -10,11 +10,29 @@
         <p class="subtitle">Create your account. All fields marked with * are required.</p>
     </div>
 
+    <!-- Form Completion Progress -->
+    <div class="form-progress">
+        <div class="progress-header">
+            <span class="progress-label">Form Completion</span>
+            <span class="progress-pct" id="progress-pct">0%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-steps">
+            <span class="progress-step" id="step-name">Name</span>
+            <span class="progress-step" id="step-email">Email</span>
+            <span class="progress-step" id="step-age">Age</span>
+            <span class="progress-step" id="step-password">Password</span>
+            <span class="progress-step" id="step-confirm">Confirm</span>
+        </div>
+    </div>
+
     <div class="card">
         <form action="#" th:action="@{/}" th:object="${personForm}" method="post" novalidate>
 
             <!-- Global error (e.g. password mismatch) -->
-            <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}">
+            <div class="alert alert-error" style="display:block" th:if="${#fields.hasGlobalErrors()}">
                 <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
             </div>
 
@@ -113,6 +131,7 @@ function togglePassword(fieldId, btn) {
     }
 }
 
+/* === Password Strength Meter === */
 document.getElementById('password').addEventListener('input', function() {
     const val = this.value;
     const bar = document.getElementById('strength-bar');
@@ -131,9 +150,52 @@ document.getElementById('password').addEventListener('input', function() {
     else if (score <= 3) { bar.className = 'strength-bar good'; text.textContent = 'Good'; }
     else { bar.className = 'strength-bar strong'; text.textContent = 'Strong'; }
     if (val.length === 0) { bar.style.width = '0'; text.textContent = 'Uppercase + lowercase + digit required'; }
+    updateProgress();
 });
 
-// --- Real-time AJAX validation ---
+/* === Form Progress Bar === */
+function updateProgress() {
+    const fields = {
+        name: document.getElementById('name').value.length >= 2,
+        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value),
+        age: (function() { var v = parseInt(document.getElementById('age').value); return v >= 18 && v <= 150; })(),
+        password: document.getElementById('password').value.length >= 8,
+        confirm: document.getElementById('confirmPassword').value.length > 0 &&
+                 document.getElementById('confirmPassword').value === document.getElementById('password').value
+    };
+
+    const done = Object.values(fields).filter(Boolean).length;
+    const total = Object.keys(fields).length;
+    const pct = Math.round((done / total) * 100);
+
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+
+    const fill = document.getElementById('progress-fill');
+    const pctEl = document.getElementById('progress-pct');
+    if (pct === 100) {
+        fill.classList.add('complete');
+        pctEl.classList.add('complete');
+    } else {
+        fill.classList.remove('complete');
+        pctEl.classList.remove('complete');
+    }
+
+    Object.keys(fields).forEach(function(key) {
+        var step = document.getElementById('step-' + key);
+        if (step) {
+            if (fields[key]) step.classList.add('done'); else step.classList.remove('done');
+        }
+    });
+}
+
+['name', 'email', 'age', 'phone', 'password', 'confirmPassword'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateProgress);
+});
+updateProgress();
+
+/* === Real-time AJAX validation === */
 let debounceTimers = {};
 function debounce(fieldId, fn, delay) {
     clearTimeout(debounceTimers[fieldId]);
@@ -182,6 +244,8 @@ document.getElementById('phone').addEventListener('input', function() {
     }, 400);
 });
 </script>
+
+<div th:replace="~{fragments/layout :: shortcuts}"></div>
 <script th:replace="~{fragments/layout :: themeScript}"></script>
 
 </body>
