@@ -335,6 +335,73 @@ code {
 .meta-success { color: #059669; font-weight: 600; }
 .meta-error { color: #ef4444; font-weight: 600; }
 
+/* === Live Indicator === */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+    display: inline-block;
+}
+.uptime-display {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* === Leaderboard === */
+.leaderboard { display: flex; flex-direction: column; gap: 10px; }
+.lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+}
+.lb-rank {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 28px;
+}
+.lb-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    min-width: 80px;
+}
+.lb-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.lb-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.lb-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 24px;
+    text-align: right;
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .container-wide { padding: 20px 16px; }
