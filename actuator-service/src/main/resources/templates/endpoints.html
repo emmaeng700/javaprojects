@@ -7,7 +7,7 @@
 <div class="container-wide">
     <div class="page-header">
         <h1>Actuator Endpoints</h1>
-        <p class="subtitle">All available Spring Boot Actuator endpoints</p>
+        <p class="subtitle">All available Spring Boot Actuator endpoints with live status</p>
     </div>
 
     <!-- Search / Filter -->
@@ -15,82 +15,211 @@
         <div class="api-form">
             <input type="text" class="api-input" id="endpoint-search" placeholder="Search endpoints...">
             <button class="btn btn-secondary btn-sm" onclick="refreshEndpoints()">Refresh</button>
+            <button class="btn btn-accent btn-sm" onclick="checkAllStatus()">Check Status</button>
         </div>
     </div>
 
     <!-- Application Endpoints -->
     <div class="card">
-        <h2>Application Endpoints</h2>
-        <div class="endpoint-list">
-            <div class="endpoint-item" onclick="window.location.href='/explorer'">
-                <span class="method-badge get">GET</span>
-                <span class="endpoint-path">/hello-world</span>
-                <span class="endpoint-desc">Returns a greeting with an auto-incrementing ID</span>
+        <div class="endpoint-group">
+            <div class="endpoint-group-header">
+                <span class="endpoint-group-icon">&#128640;</span>
+                <span class="endpoint-group-title">Application</span>
+                <span class="endpoint-group-count">6 endpoints</span>
             </div>
-            <div class="endpoint-item" onclick="window.location.href='/'">
-                <span class="method-badge get">GET</span>
-                <span class="endpoint-path">/</span>
-                <span class="endpoint-desc">Dashboard page</span>
-            </div>
-            <div class="endpoint-item" onclick="window.location.href='/explorer'">
-                <span class="method-badge get">GET</span>
-                <span class="endpoint-path">/explorer</span>
-                <span class="endpoint-desc">API Explorer page</span>
-            </div>
-            <div class="endpoint-item" onclick="window.location.href='/endpoints'">
-                <span class="method-badge get">GET</span>
-                <span class="endpoint-path">/endpoints</span>
-                <span class="endpoint-desc">This page - endpoint listing</span>
+            <div class="endpoint-list">
+                <div class="endpoint-item" data-path="/hello-world">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/hello-world</span>
+                    <span class="endpoint-desc">Greeting with auto-incrementing ID</span>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint('/hello-world?name=Test', this)">Try</button>
+                </div>
+                <div class="endpoint-item" data-path="/api/greetings/stats">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/greetings/stats</span>
+                    <span class="endpoint-desc">Greeting statistics &amp; leaderboard</span>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint('/api/greetings/stats', this)">Try</button>
+                </div>
+                <div class="endpoint-item" data-path="/api/system">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/system</span>
+                    <span class="endpoint-desc">JVM &amp; system information</span>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint('/api/system', this)">Try</button>
+                </div>
+                <div class="endpoint-item" data-path="/api/metrics/latest">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/metrics/latest</span>
+                    <span class="endpoint-desc">Latest metric snapshot</span>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint('/api/metrics/latest', this)">Try</button>
+                </div>
+                <div class="endpoint-item" data-path="/api/metrics/history">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/metrics/history</span>
+                    <span class="endpoint-desc">Time-series metric snapshots</span>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint('/api/metrics/history?count=5', this)">Try</button>
+                </div>
+                <div class="endpoint-item" data-path="/api/events">
+                    <span class="status-dot-sm pending"></span>
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/events</span>
+                    <span class="endpoint-desc">Server-Sent Events stream (SSE)</span>
+                    <button class="btn btn-xs btn-outline" style="opacity:0.5;cursor:default;" disabled>Stream</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Actuator Endpoints (dynamic) -->
-    <div class="card">
-        <h2>Actuator Endpoints</h2>
-        <p class="subtitle" style="margin-bottom:16px">
-            Served on management port <strong th:text="${managementPort}">9001</strong>
-        </p>
-        <div class="endpoint-list" id="actuator-list">
-            <div style="color:var(--text-muted);padding:16px;text-align:center">Loading actuator endpoints...</div>
-        </div>
-    </div>
+    <!-- Actuator Endpoints (dynamic, grouped) -->
+    <div id="actuator-groups"></div>
 </div>
 
 <script>
-const MGMT = 'http://localhost:' + [[${managementPort}]];
+// === Endpoint Groups ===
+var GROUPS = {
+    'Core': { icon: '&#9829;', match: ['health', 'info', 'self'] },
+    'Metrics': { icon: '&#128200;', match: ['metrics', 'prometheus'] },
+    'Debugging': { icon: '&#128269;', match: ['threaddump', 'heapdump', 'loggers'] },
+    'Configuration': { icon: '&#9881;', match: ['configprops', 'conditions', 'beans', 'env'] },
+    'Web': { icon: '&#127760;', match: ['mappings', 'scheduledtasks', 'caches', 'flyway', 'liquibase'] }
+};
+
+function getGroup(key) {
+    for (var g in GROUPS) {
+        if (GROUPS.hasOwnProperty(g)) {
+            for (var i = 0; i < GROUPS[g].match.length; i++) {
+                if (key.toLowerCase().indexOf(GROUPS[g].match[i]) !== -1) return g;
+            }
+        }
+    }
+    return 'Other';
+}
 
 function refreshEndpoints() {
-    var list = document.getElementById('actuator-list');
-    list.innerHTML = '<div style="color:var(--text-muted);padding:16px;text-align:center">Loading...</div>';
+    var container = document.getElementById('actuator-groups');
+    container.innerHTML = '<div class="card"><div style="color:var(--text-muted);padding:16px;text-align:center">Loading actuator endpoints...</div></div>';
 
-    fetch(MGMT + '/actuator')
+    fetch('/api/actuator')
         .then(function(r) { return r.json(); })
         .then(function(d) {
             var links = d._links || {};
             var keys = Object.keys(links).sort();
-            list.innerHTML = keys.map(function(key) {
+
+            // Group endpoints
+            var grouped = {};
+            keys.forEach(function(key) {
+                var group = getGroup(key);
+                if (!grouped[group]) grouped[group] = [];
                 var href = links[key].href || '';
                 var path = href.replace(/https?:\/\/[^\/]+/, '');
-                var templated = links[key].templated ? ' <span style="color:var(--warm)">{...}</span>' : '';
-                return '<div class="endpoint-item actuator-ep" onclick="openInExplorer(\'' + path + '\')">' +
-                    '<span class="method-badge get">GET</span>' +
-                    '<span class="endpoint-path">' + path + templated + '</span>' +
-                    '<span class="endpoint-desc">' + key + '</span>' +
-                    '</div>';
-            }).join('');
+                var proxyPath = path.replace('/actuator', '/api/actuator');
+                grouped[group].push({ key: key, path: path, proxyPath: proxyPath, templated: links[key].templated });
+            });
+
+            var html = '';
+            var groupOrder = ['Core', 'Metrics', 'Configuration', 'Debugging', 'Web', 'Other'];
+            groupOrder.forEach(function(groupName) {
+                var items = grouped[groupName];
+                if (!items || items.length === 0) return;
+
+                var icon = GROUPS[groupName] ? GROUPS[groupName].icon : '&#128196;';
+                html += '<div class="card"><div class="endpoint-group">';
+                html += '<div class="endpoint-group-header">';
+                html += '<span class="endpoint-group-icon">' + icon + '</span>';
+                html += '<span class="endpoint-group-title">' + groupName + '</span>';
+                html += '<span class="endpoint-group-count">' + items.length + '</span>';
+                html += '</div><div class="endpoint-list">';
+
+                items.forEach(function(ep) {
+                    var templated = ep.templated ? ' <span style="color:var(--warm)">{...}</span>' : '';
+                    var tryBtn = ep.templated
+                        ? '<button class="btn btn-xs btn-outline" style="opacity:0.5" disabled>Template</button>'
+                        : '<button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint(\'' + ep.proxyPath + '\', this)">Try</button>';
+                    html += '<div class="endpoint-item actuator-ep" data-path="' + ep.proxyPath + '">';
+                    html += '<span class="status-dot-sm pending"></span>';
+                    html += '<span class="method-badge get">GET</span>';
+                    html += '<span class="endpoint-path">' + ep.path + templated + '</span>';
+                    html += '<span class="endpoint-desc">' + ep.key + '</span>';
+                    html += tryBtn;
+                    html += '</div>';
+                });
+
+                html += '</div></div></div>';
+            });
+
+            container.innerHTML = html;
         })
         .catch(function() {
-            list.innerHTML = '<div class="alert alert-error">Could not reach management port at ' + MGMT + '</div>';
+            container.innerHTML = '<div class="card"><div class="alert alert-error">Could not reach actuator proxy endpoint</div></div>';
         });
 }
 
-function openInExplorer(path) {
-    // Navigate to explorer with pre-filled URL
-    window.location.href = '/explorer';
+// === Try It Inline ===
+function tryEndpoint(path, btn) {
+    var item = btn.closest('.endpoint-item');
+    // Remove existing inline response if any
+    var existing = item.querySelector('.inline-response');
+    if (existing) { existing.remove(); return; }
+
+    btn.textContent = '...';
+    fetch(path)
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+            btn.textContent = 'Try';
+            var preview = text;
+            try {
+                var parsed = JSON.parse(text);
+                preview = JSON.stringify(parsed, null, 2);
+            } catch(e) {}
+            if (preview.length > 600) preview = preview.substring(0, 600) + '\n...truncated';
+            var div = document.createElement('div');
+            div.className = 'inline-response';
+            div.style.width = '100%';
+            div.textContent = preview;
+            // Add close btn
+            var closeBtn = document.createElement('button');
+            closeBtn.className = 'btn btn-xs btn-secondary';
+            closeBtn.textContent = 'Close';
+            closeBtn.style.marginTop = '8px';
+            closeBtn.onclick = function(e) { e.stopPropagation(); div.remove(); };
+            div.appendChild(document.createElement('br'));
+            div.appendChild(closeBtn);
+            item.after(div);
+        })
+        .catch(function() {
+            btn.textContent = 'Try';
+            showToast('Failed to reach ' + path, true);
+        });
 }
 
-// Search filter
+// === Live Status Check ===
+function checkAllStatus() {
+    var items = document.querySelectorAll('.endpoint-item[data-path]');
+    var delay = 0;
+    items.forEach(function(item) {
+        var path = item.getAttribute('data-path');
+        var dot = item.querySelector('.status-dot-sm');
+        if (!dot || !path || path === '/api/events') return;
+
+        setTimeout(function() {
+            fetch(path, { method: 'HEAD' })
+                .then(function(r) {
+                    dot.className = r.ok ? 'status-dot-sm green' : 'status-dot-sm red';
+                })
+                .catch(function() {
+                    dot.className = 'status-dot-sm red';
+                });
+        }, delay);
+        delay += 80;
+    });
+    showToast('Checking endpoint status...');
+}
+
+// === Search Filter ===
 document.getElementById('endpoint-search').addEventListener('input', function() {
     var query = this.value.toLowerCase();
     var items = document.querySelectorAll('.endpoint-item');
@@ -98,9 +227,18 @@ document.getElementById('endpoint-search').addEventListener('input', function() 
         var text = item.textContent.toLowerCase();
         item.style.display = text.includes(query) ? '' : 'none';
     });
+    // Hide empty groups
+    document.querySelectorAll('.endpoint-group').forEach(function(group) {
+        var visible = group.querySelectorAll('.endpoint-item:not([style*="display: none"])');
+        group.closest('.card').style.display = visible.length > 0 ? '' : 'none';
+    });
 });
 
+// === Init ===
 refreshEndpoints();
+
+// Auto-check status after load
+setTimeout(checkAllStatus, 1500);
 </script>
 
 <div th:replace="~{fragments/layout :: shortcuts}"></div>
