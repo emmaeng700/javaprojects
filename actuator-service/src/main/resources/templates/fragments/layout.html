@@ -20,14 +20,89 @@
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9790;</button>
 </nav>
 
+<!-- Keyboard shortcuts overlay -->
+<div th:fragment="shortcuts" class="shortcuts-overlay" id="shortcuts-overlay">
+    <div class="shortcuts-panel">
+        <h2>Keyboard Shortcuts</h2>
+        <div class="shortcut-row">
+            <span>Dashboard</span>
+            <span class="shortcut-key">Alt+D</span>
+        </div>
+        <div class="shortcut-row">
+            <span>API Explorer</span>
+            <span class="shortcut-key">Alt+E</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Endpoints</span>
+            <span class="shortcut-key">Alt+N</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Toggle Dark Mode</span>
+            <span class="shortcut-key">Alt+T</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Show Shortcuts</span>
+            <span class="shortcut-key">?</span>
+        </div>
+        <div style="margin-top:16px;text-align:right">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('shortcuts-overlay').classList.remove('visible')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div th:fragment="toasts" class="toast-container" id="toast-container"></div>
+
 <script th:fragment="themeScript">
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    showToast(document.body.classList.contains('dark-mode') ? 'Dark mode enabled' : 'Light mode enabled');
 }
 (function() {
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 })();
+
+// Toast notification system
+function showToast(message, isError) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(60px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+    if (e.key === '?') {
+        e.preventDefault();
+        var overlay = document.getElementById('shortcuts-overlay');
+        if (overlay) overlay.classList.toggle('visible');
+        return;
+    }
+    if (e.key === 'Escape') {
+        var overlay = document.getElementById('shortcuts-overlay');
+        if (overlay) overlay.classList.remove('visible');
+        return;
+    }
+    if (e.altKey) {
+        switch (e.key.toLowerCase()) {
+            case 'd': e.preventDefault(); window.location.href = '/'; break;
+            case 'e': e.preventDefault(); window.location.href = '/explorer'; break;
+            case 'n': e.preventDefault(); window.location.href = '/endpoints'; break;
+            case 't': e.preventDefault(); toggleTheme(); break;
+        }
+    }
+});
 </script>
 
 </html>

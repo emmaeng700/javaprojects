@@ -103,6 +103,8 @@ document.getElementById('endpoint-search').addEventListener('input', function() 
 refreshEndpoints();
 </script>
 
+<div th:replace="~{fragments/layout :: shortcuts}"></div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
 <script th:replace="~{fragments/layout :: themeScript}"></script>
 </body>
 </html>

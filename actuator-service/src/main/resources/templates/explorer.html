@@ -176,6 +176,8 @@ document.getElementById('url-input').addEventListener('keydown', function(e) {
 });
 </script>
 
+<div th:replace="~{fragments/layout :: shortcuts}"></div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
 <script th:replace="~{fragments/layout :: themeScript}"></script>
 </body>
 </html>

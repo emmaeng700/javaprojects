@@ -402,6 +402,89 @@ code {
     text-align: right;
 }
 
+/* === Entrance Animations === */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.card, .stat-card {
+    animation: fadeInUp 0.4s ease both;
+}
+.stats-grid .stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stats-grid .stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stats-grid .stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stats-grid .stat-card:nth-child(4) { animation-delay: 0.2s; }
+.grid-2 > .card:nth-child(1) { animation-delay: 0.25s; }
+.grid-2 > .card:nth-child(2) { animation-delay: 0.3s; }
+
+/* === Keyboard Shortcuts Panel === */
+.shortcuts-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+.shortcuts-overlay.visible { display: flex; }
+.shortcuts-panel {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+}
+.shortcuts-panel h2 { margin-bottom: 16px; }
+.shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.shortcut-row:last-child { border-bottom: none; }
+.shortcut-key {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* === Toast Notification === */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.toast {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    font-size: 14px;
+    animation: slideInRight 0.3s ease;
+    min-width: 260px;
+}
+.toast.error { border-left-color: var(--danger); }
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(60px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .container-wide { padding: 20px 16px; }
