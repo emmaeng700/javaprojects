@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+
+<div class="container-wide">
+    <div class="page-header">
+        <h1>Service Dashboard</h1>
+        <p class="subtitle">Real-time monitoring for your Spring Boot Actuator service</p>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="stats-grid">
+        <div class="stat-card green" id="health-card">
+            <div class="stat-value">
+                <span class="status-badge up" id="health-badge">
+                    <span class="status-dot"></span> UP
+                </span>
+            </div>
+            <div class="stat-label">Health Status</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="greeting-count">0</div>
+            <div class="stat-label">Greetings Served</div>
+        </div>
+        <div class="stat-card amber">
+            <div class="stat-value" th:text="${serverPort}">9000</div>
+            <div class="stat-label">Server Port</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value" th:text="${managementPort}">9001</div>
+            <div class="stat-label">Management Port</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Quick Greeting Test -->
+        <div class="card">
+            <h2>Quick Greeting</h2>
+            <div class="api-form">
+                <input type="text" class="api-input" id="greet-name" placeholder="Enter a name...">
+                <button class="btn btn-primary" onclick="sendGreeting()">Greet</button>
+            </div>
+            <div class="response-box" id="greet-response">Click "Greet" to test the /hello-world endpoint</div>
+        </div>
+
+        <!-- App Info -->
+        <div class="card">
+            <h2>Application Info</h2>
+            <div id="app-info" class="response-box">Loading...</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Health Details -->
+        <div class="card">
+            <h2>Health Details</h2>
+            <div id="health-details" class="response-box">Loading...</div>
+        </div>
+
+        <!-- JVM Metrics -->
+        <div class="card">
+            <h2>JVM Metrics</h2>
+            <table id="metrics-table">
+                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody id="metrics-body">
+                    <tr><td colspan="2" style="color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const MGMT = 'http://localhost:' + [[${managementPort}]];
+const APP = '';
+
+function sendGreeting() {
+    const name = document.getElementById('greet-name').value || 'Stranger';
+    fetch(APP + '/hello-world?name=' + encodeURIComponent(name))
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('greet-response').textContent = JSON.stringify(d, null, 2);
+            document.getElementById('greeting-count').textContent = d.id;
+        })
+        .catch(e => {
+            document.getElementById('greet-response').textContent = 'Error: ' + e.message;
+        });
+}
+
+document.getElementById('greet-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendGreeting();
+});
+
+// Fetch health
+fetch(MGMT + '/actuator/health')
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('health-details').textContent = JSON.stringify(d, null, 2);
+        var badge = document.getElementById('health-badge');
+        if (d.status === 'UP') {
+            badge.className = 'status-badge up';
+            badge.innerHTML = '<span class="status-dot"></span> UP';
+        } else {
+            badge.className = 'status-badge down';
+            badge.innerHTML = '<span class="status-dot"></span> DOWN';
+        }
+    })
+    .catch(function() {
+        document.getElementById('health-details').textContent = 'Could not reach management port ' + MGMT;
+    });
+
+// Fetch info
+fetch(MGMT + '/actuator/info')
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('app-info').textContent = JSON.stringify(d, null, 2);
+    })
+    .catch(function() {
+        document.getElementById('app-info').textContent = 'Not available';
+    });
+
+// Fetch metrics
+var metricNames = ['jvm.memory.used', 'jvm.memory.max', 'system.cpu.count', 'process.uptime'];
+var metricsBody = document.getElementById('metrics-body');
+Promise.all(metricNames.map(function(name) {
+    return fetch(MGMT + '/actuator/metrics/' + name)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var val = d.measurements[0].value;
+            if (name.includes('memory')) val = (val / 1048576).toFixed(1) + ' MB';
+            else if (name === 'process.uptime') val = Math.round(val) + 's';
+            return { name: d.name, value: val };
+        })
+        .catch(function() { return { name: name, value: 'N/A' }; });
+})).then(function(results) {
+    metricsBody.innerHTML = results.map(function(r) {
+        return '<tr><td><code>' + r.name + '</code></td><td>' + r.value + '</td></tr>';
+    }).join('');
+});
+</script>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>
