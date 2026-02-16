@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title}">Actuator Service</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 
 <nav th:fragment="nav(active)" class="navbar">
@@ -16,6 +17,7 @@
         <li><a th:href="@{/}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a></li>
         <li><a th:href="@{/explorer}" th:classappend="${active == 'explorer'} ? 'active'">API Explorer</a></li>
         <li><a th:href="@{/endpoints}" th:classappend="${active == 'endpoints'} ? 'active'">Endpoints</a></li>
+        <li><a th:href="@{/monitor}" th:classappend="${active == 'monitor'} ? 'active'">Monitor</a></li>
     </ul>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9790;</button>
 </nav>
@@ -35,6 +37,10 @@
         <div class="shortcut-row">
             <span>Endpoints</span>
             <span class="shortcut-key">Alt+N</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Monitor</span>
+            <span class="shortcut-key">Alt+M</span>
         </div>
         <div class="shortcut-row">
             <span>Toggle Dark Mode</span>
@@ -99,6 +105,7 @@ document.addEventListener('keydown', function(e) {
             case 'd': e.preventDefault(); window.location.href = '/'; break;
             case 'e': e.preventDefault(); window.location.href = '/explorer'; break;
             case 'n': e.preventDefault(); window.location.href = '/endpoints'; break;
+            case 'm': e.preventDefault(); window.location.href = '/monitor'; break;
             case 't': e.preventDefault(); toggleTheme(); break;
         }
     }

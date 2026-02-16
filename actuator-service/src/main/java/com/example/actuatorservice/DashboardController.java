@@ -34,4 +34,11 @@ public class DashboardController {
         model.addAttribute("managementPort", managementPort);
         return "endpoints";
     }
+
+    @GetMapping("/monitor")
+    public String monitor(Model model) {
+        model.addAttribute("serverPort", serverPort);
+        model.addAttribute("managementPort", managementPort);
+        return "monitor";
+    }
 }
