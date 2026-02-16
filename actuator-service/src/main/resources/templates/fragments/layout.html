@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Actuator Service</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<nav th:fragment="nav(active)" class="navbar">
+    <a class="navbar-brand" th:href="@{/}">
+        &#9881; Actuator Service
+    </a>
+    <ul class="navbar-nav">
+        <li><a th:href="@{/}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a></li>
+        <li><a th:href="@{/explorer}" th:classappend="${active == 'explorer'} ? 'active'">API Explorer</a></li>
+        <li><a th:href="@{/endpoints}" th:classappend="${active == 'endpoints'} ? 'active'">Endpoints</a></li>
+    </ul>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9790;</button>
+</nav>
+
+<script th:fragment="themeScript">
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+}
+(function() {
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+})();
+</script>
+
+</html>
