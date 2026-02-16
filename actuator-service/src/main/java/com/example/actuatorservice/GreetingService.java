@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,20 @@ public class GreetingService {
     private final AtomicLong counter = new AtomicLong();
     private final ConcurrentLinkedDeque<Map<String, Object>> history = new ConcurrentLinkedDeque<>();
     private final ConcurrentHashMap<String, AtomicLong> nameCounts = new ConcurrentHashMap<>();
+
+    private ApplicationEventPublisher eventPublisher;
+
+    public GreetingService() {}
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public GreetingService(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
 
     public Greeting greet(String name) {
         long id = counter.incrementAndGet();
@@ -33,6 +48,11 @@ public class GreetingService {
 
         // Track name frequency
         nameCounts.computeIfAbsent(name, k -> new AtomicLong()).incrementAndGet();
+
+        // Broadcast greeting event via SSE
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new GreetingEvent(entry));
+        }
 
         return greeting;
     }
