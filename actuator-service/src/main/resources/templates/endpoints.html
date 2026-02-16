@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Endpoints')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('endpoints')}"></nav>
+
+<div class="container-wide">
+    <div class="page-header">
+        <h1>Actuator Endpoints</h1>
+        <p class="subtitle">All available Spring Boot Actuator endpoints</p>
+    </div>
+
+    <!-- Search / Filter -->
+    <div class="card">
+        <div class="api-form">
+            <input type="text" class="api-input" id="endpoint-search" placeholder="Search endpoints...">
+            <button class="btn btn-secondary btn-sm" onclick="refreshEndpoints()">Refresh</button>
+        </div>
+    </div>
+
+    <!-- Application Endpoints -->
+    <div class="card">
+        <h2>Application Endpoints</h2>
+        <div class="endpoint-list">
+            <div class="endpoint-item" onclick="window.location.href='/explorer'">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/hello-world</span>
+                <span class="endpoint-desc">Returns a greeting with an auto-incrementing ID</span>
+            </div>
+            <div class="endpoint-item" onclick="window.location.href='/'">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/</span>
+                <span class="endpoint-desc">Dashboard page</span>
+            </div>
+            <div class="endpoint-item" onclick="window.location.href='/explorer'">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/explorer</span>
+                <span class="endpoint-desc">API Explorer page</span>
+            </div>
+            <div class="endpoint-item" onclick="window.location.href='/endpoints'">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/endpoints</span>
+                <span class="endpoint-desc">This page - endpoint listing</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actuator Endpoints (dynamic) -->
+    <div class="card">
+        <h2>Actuator Endpoints</h2>
+        <p class="subtitle" style="margin-bottom:16px">
+            Served on management port <strong th:text="${managementPort}">9001</strong>
+        </p>
+        <div class="endpoint-list" id="actuator-list">
+            <div style="color:var(--text-muted);padding:16px;text-align:center">Loading actuator endpoints...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const MGMT = 'http://localhost:' + [[${managementPort}]];
+
+function refreshEndpoints() {
+    var list = document.getElementById('actuator-list');
+    list.innerHTML = '<div style="color:var(--text-muted);padding:16px;text-align:center">Loading...</div>';
+
+    fetch(MGMT + '/actuator')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var links = d._links || {};
+            var keys = Object.keys(links).sort();
+            list.innerHTML = keys.map(function(key) {
+                var href = links[key].href || '';
+                var path = href.replace(/https?:\/\/[^\/]+/, '');
+                var templated = links[key].templated ? ' <span style="color:var(--warm)">{...}</span>' : '';
+                return '<div class="endpoint-item actuator-ep" onclick="openInExplorer(\'' + path + '\')">' +
+                    '<span class="method-badge get">GET</span>' +
+                    '<span class="endpoint-path">' + path + templated + '</span>' +
+                    '<span class="endpoint-desc">' + key + '</span>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function() {
+            list.innerHTML = '<div class="alert alert-error">Could not reach management port at ' + MGMT + '</div>';
+        });
+}
+
+function openInExplorer(path) {
+    // Navigate to explorer with pre-filled URL
+    window.location.href = '/explorer';
+}
+
+// Search filter
+document.getElementById('endpoint-search').addEventListener('input', function() {
+    var query = this.value.toLowerCase();
+    var items = document.querySelectorAll('.endpoint-item');
+    items.forEach(function(item) {
+        var text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? '' : 'none';
+    });
+});
+
+refreshEndpoints();
+</script>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>
