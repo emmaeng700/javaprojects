@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('API Explorer')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('explorer')}"></nav>
+
+<div class="container-wide">
+    <div class="page-header">
+        <h1>API Explorer</h1>
+        <p class="subtitle">Test any endpoint interactively</p>
+    </div>
+
+    <div class="card">
+        <h2>Send a Request</h2>
+        <div class="api-form">
+            <select id="method-select" class="api-input" style="flex:0 0 100px">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            <input type="text" class="api-input" id="url-input" placeholder="/hello-world?name=Spring" value="/hello-world?name=Spring">
+            <button class="btn btn-primary" onclick="sendRequest()">Send</button>
+        </div>
+
+        <!-- Quick endpoint buttons -->
+        <div class="quick-links">
+            <span class="quick-label">Quick:</span>
+            <button class="btn btn-sm btn-secondary" onclick="setUrl('/hello-world?name=World')">/hello-world</button>
+            <button class="btn btn-sm btn-accent" onclick="setUrl('/actuator/health', true)">Health</button>
+            <button class="btn btn-sm btn-accent" onclick="setUrl('/actuator/info', true)">Info</button>
+            <button class="btn btn-sm btn-accent" onclick="setUrl('/actuator/metrics', true)">Metrics</button>
+            <button class="btn btn-sm btn-warm" onclick="setUrl('/actuator/env', true)">Env</button>
+            <button class="btn btn-sm btn-warm" onclick="setUrl('/actuator/beans', true)">Beans</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h2>Response</h2>
+            <div class="response-meta" id="response-meta" style="display:none">
+                <span id="resp-status"></span>
+                <span id="resp-time"></span>
+                <span id="resp-size"></span>
+            </div>
+            <div class="response-box" id="response-body">Click "Send" to make a request</div>
+        </div>
+
+        <div class="card">
+            <h2>Response Headers</h2>
+            <div class="response-box" id="response-headers">Headers will appear here</div>
+        </div>
+    </div>
+
+    <!-- Request History -->
+    <div class="card">
+        <h2>Request History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <tr><td colspan="5" style="color:var(--text-muted);text-align:center">No requests yet</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const MGMT = 'http://localhost:' + [[${managementPort}]];
+const APP = '';
+var history = [];
+
+function setUrl(url, isMgmt) {
+    document.getElementById('url-input').value = url;
+    document.getElementById('method-select').value = 'GET';
+    if (isMgmt) {
+        document.getElementById('url-input').dataset.mgmt = 'true';
+    } else {
+        delete document.getElementById('url-input').dataset.mgmt;
+    }
+    sendRequest();
+}
+
+function sendRequest() {
+    var input = document.getElementById('url-input');
+    var url = input.value;
+    var method = document.getElementById('method-select').value;
+    var isMgmt = input.dataset.mgmt === 'true' || url.startsWith('/actuator');
+    var base = isMgmt ? MGMT : APP;
+
+    var start = performance.now();
+    document.getElementById('response-body').textContent = 'Loading...';
+
+    fetch(base + url, { method: method })
+        .then(function(r) {
+            var elapsed = Math.round(performance.now() - start);
+            var status = r.status + ' ' + r.statusText;
+
+            // Show headers
+            var headers = [];
+            r.headers.forEach(function(val, key) {
+                headers.push(key + ': ' + val);
+            });
+            document.getElementById('response-headers').textContent = headers.join('\n');
+
+            return r.text().then(function(text) {
+                var meta = document.getElementById('response-meta');
+                meta.style.display = 'flex';
+                var statusEl = document.getElementById('resp-status');
+                statusEl.textContent = status;
+                statusEl.className = r.ok ? 'meta-success' : 'meta-error';
+                document.getElementById('resp-time').textContent = elapsed + 'ms';
+                document.getElementById('resp-size').textContent = text.length + ' bytes';
+
+                try {
+                    var parsed = JSON.parse(text);
+                    document.getElementById('response-body').textContent = JSON.stringify(parsed, null, 2);
+                } catch(e) {
+                    document.getElementById('response-body').textContent = text;
+                }
+
+                addHistory(method, url, r.status, elapsed);
+            });
+        })
+        .catch(function(e) {
+            document.getElementById('response-body').textContent = 'Error: ' + e.message;
+            document.getElementById('response-headers').textContent = '';
+            var meta = document.getElementById('response-meta');
+            meta.style.display = 'flex';
+            document.getElementById('resp-status').textContent = 'Failed';
+            document.getElementById('resp-status').className = 'meta-error';
+            document.getElementById('resp-time').textContent = '';
+            document.getElementById('resp-size').textContent = '';
+            addHistory(method, url, 'ERR', 0);
+        });
+}
+
+function addHistory(method, url, status, time) {
+    history.unshift({ method: method, url: url, status: status, time: time });
+    if (history.length > 20) history.pop();
+    renderHistory();
+}
+
+function renderHistory() {
+    var body = document.getElementById('history-body');
+    body.innerHTML = history.map(function(h) {
+        var statusClass = (h.status >= 200 && h.status < 300) ? 'meta-success' : 'meta-error';
+        return '<tr>' +
+            '<td><span class="method-badge ' + h.method.toLowerCase() + '">' + h.method + '</span></td>' +
+            '<td><code>' + h.url + '</code></td>' +
+            '<td><span class="' + statusClass + '">' + h.status + '</span></td>' +
+            '<td>' + h.time + 'ms</td>' +
+            '<td><button class="btn btn-sm btn-secondary" onclick="replayRequest(\'' + h.method + '\',\'' + h.url + '\')">Replay</button></td>' +
+            '</tr>';
+    }).join('');
+}
+
+function replayRequest(method, url) {
+    document.getElementById('method-select').value = method;
+    document.getElementById('url-input').value = url;
+    if (url.startsWith('/actuator')) {
+        document.getElementById('url-input').dataset.mgmt = 'true';
+    }
+    sendRequest();
+}
+
+document.getElementById('url-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendRequest();
+});
+</script>
+
+<script th:replace="~{fragments/layout :: themeScript}"></script>
+</body>
+</html>
