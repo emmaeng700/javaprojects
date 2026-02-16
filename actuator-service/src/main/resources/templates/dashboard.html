@@ -6,13 +6,18 @@
 
 <div class="container-wide">
     <div class="page-header">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
                 <h1>Service Dashboard</h1>
                 <p class="subtitle">Real-time monitoring for your Spring Boot Actuator service</p>
             </div>
             <div style="text-align:right">
-                <div class="live-indicator"><span class="live-dot"></span> LIVE</div>
+                <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
+                    <div class="sse-indicator" id="sse-status">
+                        <span class="sse-dot"></span> SSE
+                    </div>
+                    <div class="live-indicator"><span class="live-dot"></span> LIVE</div>
+                </div>
                 <div class="uptime-display" id="uptime">--</div>
             </div>
         </div>
@@ -37,8 +42,40 @@
             <div class="stat-label">Unique Names</div>
         </div>
         <div class="stat-card amber">
-            <div class="stat-value" th:text="${serverPort}">9000</div>
-            <div class="stat-label">Server Port</div>
+            <div class="stat-value">
+                <svg width="48" height="48" viewBox="0 0 48 48" style="vertical-align:middle;">
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="var(--warm)" stroke-width="4" opacity="0.2"/>
+                    <circle id="mini-mem-gauge" cx="24" cy="24" r="20" fill="none" stroke="var(--warm)" stroke-width="4"
+                            stroke-dasharray="125.66" stroke-dashoffset="125.66" stroke-linecap="round" transform="rotate(-90 24 24)"
+                            style="transition:stroke-dashoffset 0.8s ease;"/>
+                </svg>
+                <span id="mini-mem-pct" style="margin-left:6px;">0%</span>
+            </div>
+            <div class="stat-label">Heap Memory</div>
+        </div>
+    </div>
+
+    <!-- Sparkline Metrics -->
+    <div class="sparkline-grid">
+        <div class="sparkline-card">
+            <div class="sparkline-label">Heap Used</div>
+            <div class="sparkline-value" id="spark-heap-val">-- MB</div>
+            <canvas id="spark-heap" height="40"></canvas>
+        </div>
+        <div class="sparkline-card">
+            <div class="sparkline-label">Live Threads</div>
+            <div class="sparkline-value" id="spark-thread-val">--</div>
+            <canvas id="spark-threads" height="40"></canvas>
+        </div>
+        <div class="sparkline-card">
+            <div class="sparkline-label">CPU Usage</div>
+            <div class="sparkline-value" id="spark-cpu-val">--%</div>
+            <canvas id="spark-cpu" height="40"></canvas>
+        </div>
+        <div class="sparkline-card">
+            <div class="sparkline-label">Greetings / min</div>
+            <div class="sparkline-value" id="spark-gpm-val">0</div>
+            <canvas id="spark-activity" height="40"></canvas>
         </div>
     </div>
 
@@ -69,15 +106,12 @@
             <div id="health-details" class="response-box">Loading...</div>
         </div>
 
-        <!-- JVM Metrics -->
+        <!-- Greeting Activity Chart -->
         <div class="card">
-            <h2>JVM Metrics</h2>
-            <table id="metrics-table">
-                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
-                <tbody id="metrics-body">
-                    <tr><td colspan="2" style="color:var(--text-muted)">Loading...</td></tr>
-                </tbody>
-            </table>
+            <h2>Greeting Activity</h2>
+            <div class="chart-container-sm">
+                <canvas id="activityChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -102,34 +136,147 @@
 </div>
 
 <script>
-const MGMT = 'http://localhost:' + [[${managementPort}]];
-const APP = '';
+// === Sparkline Chart Setup ===
+function createSparkline(canvasId, color) {
+    var ctx = document.getElementById(canvasId).getContext('2d');
+    return new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: color.replace('1)', '0.1)').replace('rgb', 'rgba'), fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } }
+        }
+    });
+}
+var sparkHeap = createSparkline('spark-heap', 'rgb(99,102,241)');
+var sparkThreads = createSparkline('spark-threads', 'rgb(16,185,129)');
+var sparkCpu = createSparkline('spark-cpu', 'rgb(245,158,11)');
 
+// Activity bar chart (greetings per minute)
+var activityBuckets = new Array(10).fill(0);
+var activityLabels = [];
+for (var i = 9; i >= 0; i--) activityLabels.push(i === 0 ? 'now' : i + 'm ago');
+var actCtx = document.getElementById('activityChart').getContext('2d');
+var activityChart = new Chart(actCtx, {
+    type: 'bar',
+    data: { labels: activityLabels, datasets: [{ data: activityBuckets, backgroundColor: 'rgba(99,102,241,0.6)', borderRadius: 4, borderSkipped: false }] },
+    options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8' } }, y: { display: false, beginAtZero: true } }
+    }
+});
+
+// Activity sparkline
+var sparkActivity = createSparkline('spark-activity', 'rgb(99,102,241)');
+var activityPerMin = [];
+
+// Track greeting timestamps for per-minute bucketing
+var greetingTimestamps = [];
+function recordGreetingTime() {
+    greetingTimestamps.push(Date.now());
+}
+function recalcActivity() {
+    var now = Date.now();
+    var cutoff = now - 10 * 60 * 1000;
+    greetingTimestamps = greetingTimestamps.filter(function(t) { return t > cutoff; });
+    var buckets = new Array(10).fill(0);
+    for (var j = 0; j < greetingTimestamps.length; j++) {
+        var ago = Math.floor((now - greetingTimestamps[j]) / 60000);
+        if (ago < 10) buckets[9 - ago]++;
+    }
+    activityChart.data.datasets[0].data = buckets;
+    activityChart.update('none');
+    // Current minute rate
+    var currentMin = buckets[9] || 0;
+    document.getElementById('spark-gpm-val').textContent = currentMin;
+    sparkActivity.data.labels.push('');
+    sparkActivity.data.datasets[0].data.push(currentMin);
+    if (sparkActivity.data.labels.length > 30) { sparkActivity.data.labels.shift(); sparkActivity.data.datasets[0].data.shift(); }
+    sparkActivity.update('none');
+}
+setInterval(recalcActivity, 5000);
+
+function pushSparkData(chart, val) {
+    chart.data.labels.push('');
+    chart.data.datasets[0].data.push(val);
+    if (chart.data.labels.length > 60) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+    chart.update('none');
+}
+
+// === Confetti ===
+var lastGreetingCount = 0;
+var MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+function checkMilestone(newCount) {
+    for (var i = 0; i < MILESTONES.length; i++) {
+        if (newCount >= MILESTONES[i] && lastGreetingCount < MILESTONES[i]) {
+            launchConfetti();
+            showToast('Milestone: ' + MILESTONES[i] + ' greetings!');
+            break;
+        }
+    }
+    lastGreetingCount = newCount;
+}
+function launchConfetti() {
+    var colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+    for (var i = 0; i < 60; i++) {
+        var el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = '-10px';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDelay = (Math.random() * 0.5) + 's';
+        el.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+        el.style.width = (6 + Math.random() * 6) + 'px';
+        el.style.height = (6 + Math.random() * 6) + 'px';
+        document.body.appendChild(el);
+        setTimeout(function(e) { e.remove(); }.bind(null, el), 3000);
+    }
+}
+
+// === Avatar Color Generator ===
+function nameColor(name) {
+    var hash = 0;
+    for (var i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    var hue = Math.abs(hash) % 360;
+    return 'hsl(' + hue + ', 65%, 55%)';
+}
+
+// === Greeting ===
 function sendGreeting() {
-    const name = document.getElementById('greet-name').value || 'Stranger';
-    fetch(APP + '/hello-world?name=' + encodeURIComponent(name))
-        .then(r => r.json())
-        .then(d => {
+    var name = document.getElementById('greet-name').value.trim();
+    if (name === '') {
+        document.getElementById('greet-response').textContent = 'Please enter a name.';
+        document.getElementById('greet-name').focus();
+        return;
+    }
+    fetch('/hello-world?name=' + encodeURIComponent(name))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
             document.getElementById('greet-response').textContent = JSON.stringify(d, null, 2);
+            document.getElementById('greet-name').value = '';
+            recordGreetingTime();
+            recalcActivity();
             refreshStats();
             refreshHistory();
         })
-        .catch(e => {
+        .catch(function(e) {
             document.getElementById('greet-response').textContent = 'Error: ' + e.message;
         });
 }
-
 document.getElementById('greet-name').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendGreeting();
 });
 
 // === Stats & Leaderboard ===
 function refreshStats() {
-    fetch(APP + '/api/greetings/stats')
-        .then(r => r.json())
-        .then(d => {
+    fetch('/api/greetings/stats')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
             animateCounter('greeting-count', d.totalGreetings);
             animateCounter('unique-names', d.uniqueNames);
+            checkMilestone(d.totalGreetings);
             renderLeaderboard(d.topNames || []);
         })
         .catch(function() {});
@@ -139,6 +286,8 @@ function animateCounter(id, target) {
     var el = document.getElementById(id);
     var current = parseInt(el.textContent) || 0;
     if (current === target) return;
+    el.classList.add('bumped');
+    setTimeout(function() { el.classList.remove('bumped'); }, 300);
     var step = target > current ? 1 : -1;
     var delay = Math.max(20, 300 / Math.abs(target - current));
     function tick() {
@@ -158,10 +307,12 @@ function renderLeaderboard(topNames) {
     var maxCount = topNames[0].count;
     el.innerHTML = topNames.map(function(item, i) {
         var pct = Math.round((item.count / maxCount) * 100);
-        var medal = i === 0 ? '&#9733; ' : '';
+        var rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        var initial = item.name.charAt(0).toUpperCase();
         return '<div class="lb-row">' +
-            '<span class="lb-rank">#' + (i + 1) + '</span>' +
-            '<span class="lb-name">' + medal + item.name + '</span>' +
+            '<div class="lb-avatar" style="background:' + nameColor(item.name) + '">' + initial + '</div>' +
+            '<span class="lb-rank ' + rankClass + '">#' + (i + 1) + '</span>' +
+            '<span class="lb-name">' + item.name + '</span>' +
             '<div class="lb-bar-track"><div class="lb-bar-fill" style="width:' + pct + '%"></div></div>' +
             '<span class="lb-count">' + item.count + '</span>' +
             '</div>';
@@ -170,8 +321,8 @@ function renderLeaderboard(topNames) {
 
 // === History ===
 function refreshHistory() {
-    fetch(APP + '/api/greetings/history')
-        .then(r => r.json())
+    fetch('/api/greetings/history')
+        .then(function(r) { return r.json(); })
         .then(function(data) {
             var body = document.getElementById('history-body');
             if (data.length === 0) {
@@ -180,17 +331,17 @@ function refreshHistory() {
             }
             body.innerHTML = data.slice(0, 10).map(function(g) {
                 var time = new Date(g.timestamp).toLocaleTimeString();
-                return '<tr><td>' + g.id + '</td><td><strong>' + g.name + '</strong></td><td><code>' + g.content + '</code></td><td>' + time + '</td></tr>';
+                return '<tr><td>' + g.id + '</td><td><div style="display:flex;align-items:center;gap:6px;"><div class="lb-avatar" style="width:22px;height:22px;font-size:10px;background:' + nameColor(g.name) + '">' + g.name.charAt(0).toUpperCase() + '</div><strong>' + g.name + '</strong></div></td><td><code>' + g.content + '</code></td><td>' + time + '</td></tr>';
             }).join('');
         })
         .catch(function() {});
 }
 
-// === Health (auto-refresh every 10s) ===
+// === Health ===
 function refreshHealth() {
-    fetch(MGMT + '/actuator/health')
-        .then(r => r.json())
-        .then(d => {
+    fetch('/api/actuator/health')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
             document.getElementById('health-details').textContent = JSON.stringify(d, null, 2);
             var badge = document.getElementById('health-badge');
             if (d.status === 'UP') {
@@ -202,82 +353,87 @@ function refreshHealth() {
             }
         })
         .catch(function() {
-            document.getElementById('health-details').textContent = 'Could not reach management port ' + MGMT;
+            document.getElementById('health-details').textContent = 'Could not reach health endpoint';
         });
 }
 
 // === Uptime ===
 var uptimeStart = null;
 function refreshUptime() {
-    fetch(MGMT + '/actuator/metrics/process.uptime')
-        .then(r => r.json())
+    fetch('/api/actuator/metrics/process.uptime')
+        .then(function(r) { return r.json(); })
         .then(function(d) {
             uptimeStart = Date.now() - (d.measurements[0].value * 1000);
         })
         .catch(function() {});
 }
-
 function tickUptime() {
     if (uptimeStart) {
         var elapsed = Math.floor((Date.now() - uptimeStart) / 1000);
         var h = Math.floor(elapsed / 3600);
         var m = Math.floor((elapsed % 3600) / 60);
         var s = elapsed % 60;
-        document.getElementById('uptime').textContent =
-            (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's';
+        document.getElementById('uptime').textContent = (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's';
     }
     requestAnimationFrame(tickUptime);
 }
 
-// === Info ===
-fetch(MGMT + '/actuator/info')
-    .then(r => r.json())
-    .then(d => {
+// === App Info ===
+fetch('/api/actuator/info')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
         document.getElementById('app-info').textContent = JSON.stringify(d, null, 2);
     })
     .catch(function() {
         document.getElementById('app-info').textContent = 'Not available';
     });
 
-// === Metrics ===
-function refreshMetrics() {
-    var metricNames = ['jvm.memory.used', 'jvm.memory.max', 'system.cpu.count', 'process.uptime', 'jvm.threads.live'];
-    var metricsBody = document.getElementById('metrics-body');
-    Promise.all(metricNames.map(function(name) {
-        return fetch(MGMT + '/actuator/metrics/' + name)
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                var val = d.measurements[0].value;
-                if (name.includes('memory')) val = (val / 1048576).toFixed(1) + ' MB';
-                else if (name === 'process.uptime') {
-                    var hrs = Math.floor(val / 3600);
-                    var mins = Math.floor((val % 3600) / 60);
-                    val = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + Math.round(val % 60) + 's';
-                }
-                return { name: d.name, value: val };
-            })
-            .catch(function() { return { name: name, value: 'N/A' }; });
-    })).then(function(results) {
-        metricsBody.innerHTML = results.map(function(r) {
-            return '<tr><td><code>' + r.name + '</code></td><td>' + r.value + '</td></tr>';
-        }).join('');
-    });
-}
+// === SSE Connection ===
+var eventSource = new EventSource('/api/events');
+var sseStatus = document.getElementById('sse-status');
 
-// === Initial load & auto-refresh ===
+eventSource.addEventListener('metrics', function(e) {
+    var s = JSON.parse(e.data);
+    var usedMB = (s.heapUsed / 1048576).toFixed(1);
+    var maxMB = (s.heapMax / 1048576).toFixed(1);
+    var memPct = maxMB > 0 ? (usedMB / maxMB) : 0;
+
+    // Mini gauge
+    document.getElementById('mini-mem-gauge').setAttribute('stroke-dashoffset', 125.66 * (1 - memPct));
+    document.getElementById('mini-mem-pct').textContent = Math.round(memPct * 100) + '%';
+
+    // Sparklines
+    pushSparkData(sparkHeap, parseFloat(usedMB));
+    document.getElementById('spark-heap-val').textContent = usedMB + ' MB';
+    pushSparkData(sparkThreads, s.threadCount);
+    document.getElementById('spark-thread-val').textContent = s.threadCount;
+    pushSparkData(sparkCpu, s.cpuUsage.toFixed(1));
+    document.getElementById('spark-cpu-val').textContent = s.cpuUsage.toFixed(1) + '%';
+});
+
+eventSource.addEventListener('greeting', function(e) {
+    var g = JSON.parse(e.data);
+    showToast('Hello, ' + g.name + '!');
+    recordGreetingTime();
+    recalcActivity();
+    refreshStats();
+    refreshHistory();
+});
+
+eventSource.onerror = function() {
+    sseStatus.className = 'sse-indicator disconnected';
+    sseStatus.innerHTML = '<span class="sse-dot"></span> Reconnecting';
+};
+
+// === Initial Load ===
 refreshHealth();
-refreshMetrics();
 refreshStats();
 refreshHistory();
 refreshUptime();
 tickUptime();
 
-setInterval(function() {
-    refreshHealth();
-    refreshMetrics();
-    refreshStats();
-    refreshHistory();
-}, 10000);
+// Health refresh every 30s (not via SSE)
+setInterval(refreshHealth, 30000);
 </script>
 
 <div th:replace="~{fragments/layout :: shortcuts}"></div>
