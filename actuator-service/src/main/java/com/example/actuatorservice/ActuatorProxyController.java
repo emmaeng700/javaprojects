@@ -108,6 +108,11 @@ public class ActuatorProxyController {
         return proxy("/actuator/sbom");
     }
 
+    @GetMapping("/sbom/{id}")
+    public ResponseEntity<String> sbomById(@PathVariable String id) {
+        return proxy("/actuator/sbom/" + id);
+    }
+
     /** Catch-all: proxies any sub-path like /health/{*path}, /env/{toMatch}, /loggers/{name}, etc. */
     @GetMapping("/{endpoint}/**")
     public ResponseEntity<String> catchAll(HttpServletRequest request) {
