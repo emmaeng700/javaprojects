@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ public class GreetingService {
         this.eventPublisher = eventPublisher;
     }
 
+    @CacheEvict(cacheNames = {"greetingStats", "greetingHistory"}, allEntries = true)
     public Greeting greet(String name) {
         long id = counter.incrementAndGet();
         Greeting greeting = new Greeting(id, String.format(template, name));
@@ -61,10 +64,12 @@ public class GreetingService {
         return counter.get();
     }
 
+    @Cacheable("greetingHistory")
     public List<Map<String, Object>> getHistory() {
         return new ArrayList<>(history);
     }
 
+    @Cacheable("greetingStats")
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("totalGreetings", counter.get());

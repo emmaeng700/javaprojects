@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SystemInfoController {
 
     @GetMapping("/api/system")
+    @Cacheable("systemInfo")
     public Map<String, Object> systemInfo() {
         RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
         MemoryMXBean memory = ManagementFactory.getMemoryMXBean();

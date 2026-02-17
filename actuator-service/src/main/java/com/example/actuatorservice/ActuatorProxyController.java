@@ -93,6 +93,16 @@ public class ActuatorProxyController {
         return proxy("/actuator/conditions");
     }
 
+    @GetMapping("/caches")
+    public ResponseEntity<String> caches() {
+        return proxy("/actuator/caches");
+    }
+
+    @GetMapping("/caches/{cache}")
+    public ResponseEntity<String> cache(@PathVariable String cache) {
+        return proxy("/actuator/caches/" + cache);
+    }
+
     /** Catch-all: proxies any sub-path like /health/{*path}, /env/{toMatch}, /loggers/{name}, etc. */
     @GetMapping("/{endpoint}/**")
     public ResponseEntity<String> catchAll(HttpServletRequest request) {
