@@ -136,10 +136,15 @@ function refreshEndpoints() {
 
                 items.forEach(function(ep) {
                     var templated = ep.templated ? ' <span style="color:var(--warm)">{...}</span>' : '';
-                    var tryBtn = ep.templated
-                        ? '<button class="btn btn-xs btn-outline" style="opacity:0.5" disabled>Template</button>'
-                        : '<button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint(\'' + ep.proxyPath + '\', this)">Try</button>';
-                    html += '<div class="endpoint-item actuator-ep" data-path="' + ep.proxyPath + '">';
+                    var tryBtn;
+                    if (ep.templated) {
+                        // Extract param names from URL template for data attribute
+                        var params = (ep.path.match(/\{[^}]+\}/g) || []).map(function(p) { return p.replace(/[{}]/g, ''); }).join(',');
+                        tryBtn = '<button class="btn btn-xs btn-warm" onclick="event.stopPropagation();showParamForm(\'' + ep.proxyPath + '\', \'' + ep.path + '\', \'' + params + '\', this)">Try</button>';
+                    } else {
+                        tryBtn = '<button class="btn btn-xs btn-outline" onclick="event.stopPropagation();tryEndpoint(\'' + ep.proxyPath + '\', this)">Try</button>';
+                    }
+                    html += '<div class="endpoint-item actuator-ep" data-path="' + ep.proxyPath + '" data-raw-path="' + ep.path + '">';
                     html += '<span class="status-dot-sm pending"></span>';
                     html += '<span class="method-badge get">GET</span>';
                     html += '<span class="endpoint-path">' + ep.path + templated + '</span>';
@@ -202,8 +207,11 @@ function checkAllStatus() {
     var delay = 0;
     items.forEach(function(item) {
         var path = item.getAttribute('data-path');
+        var rawPath = item.getAttribute('data-raw-path') || '';
         var dot = item.querySelector('.status-dot-sm');
         if (!dot || !path || path === '/api/events') return;
+        // Skip templated endpoints — they require parameters
+        if (rawPath.indexOf('{') !== -1) return;
 
         setTimeout(function() {
             fetch(path, { method: 'HEAD' })
@@ -233,6 +241,112 @@ document.getElementById('endpoint-search').addEventListener('input', function() 
         group.closest('.card').style.display = visible.length > 0 ? '' : 'none';
     });
 });
+
+// === Escape HTML ===
+function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+}
+
+// === Parameter Form for Templated Endpoints ===
+function showParamForm(proxyPath, rawPath, paramsCsv, btn) {
+    var item = btn.closest('.endpoint-item');
+    // Toggle: remove existing form if already open
+    var existing = item.nextElementSibling;
+    if (existing && existing.classList.contains('param-form')) { existing.remove(); return; }
+    // Also remove any inline-response
+    if (existing && existing.classList.contains('inline-response')) { existing.remove(); }
+
+    var params = paramsCsv.split(',').filter(Boolean);
+    var formHtml = '';
+    params.forEach(function(p) {
+        formHtml += '<div class="param-field">';
+        formHtml += '<label class="param-label">' + escapeHtml(p) + '</label>';
+        formHtml += '<input class="param-input" data-param="' + escapeHtml(p) + '" placeholder="Enter ' + escapeHtml(p) + '">';
+        formHtml += '</div>';
+    });
+    formHtml += '<div class="param-form-actions">';
+    formHtml += '<button class="btn btn-xs btn-accent" onclick="event.stopPropagation();validateAndTry(\'' + proxyPath + '\', \'' + rawPath + '\', this)">Validate &amp; Test</button>';
+    formHtml += '<button class="btn btn-xs btn-secondary" onclick="event.stopPropagation();this.closest(\'.param-form\').remove()">Cancel</button>';
+    formHtml += '</div>';
+
+    var div = document.createElement('div');
+    div.className = 'param-form';
+    div.innerHTML = formHtml;
+    item.after(div);
+    // Focus the first input
+    var firstInput = div.querySelector('.param-input');
+    if (firstInput) firstInput.focus();
+}
+
+function validateAndTry(proxyPath, rawPath, btn) {
+    var form = btn.closest('.param-form');
+    var inputs = form.querySelectorAll('.param-input');
+    var resolvedProxy = proxyPath;
+    var resolvedRaw = rawPath;
+    var allFilled = true;
+
+    inputs.forEach(function(input) {
+        var paramName = input.getAttribute('data-param');
+        var value = input.value.trim();
+        if (!value) {
+            allFilled = false;
+            input.style.borderColor = 'var(--danger)';
+        } else {
+            input.style.borderColor = '';
+            resolvedProxy = resolvedProxy.replace('{' + paramName + '}', encodeURIComponent(value));
+            resolvedRaw = resolvedRaw.replace('{' + paramName + '}', encodeURIComponent(value));
+        }
+    });
+    if (!allFilled) { showToast('Please fill in all parameters', true); return; }
+
+    // Disable the button while validating
+    btn.textContent = 'Validating...';
+    btn.disabled = true;
+
+    // Remove any previous inline-response after the form
+    var nextEl = form.nextElementSibling;
+    if (nextEl && nextEl.classList.contains('inline-response')) nextEl.remove();
+
+    // Step 1: HEAD request to validate
+    fetch(resolvedProxy, { method: 'HEAD' })
+        .then(function(r) {
+            if (!r.ok) {
+                throw new Error('HTTP ' + r.status);
+            }
+            // Step 2: GET request for full response
+            return fetch(resolvedProxy);
+        })
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+            btn.textContent = 'Validate & Test';
+            btn.disabled = false;
+            var preview = text;
+            try {
+                var parsed = JSON.parse(text);
+                preview = JSON.stringify(parsed, null, 2);
+            } catch(e) {}
+            if (preview.length > 600) preview = preview.substring(0, 600) + '\n...truncated';
+            var div = document.createElement('div');
+            div.className = 'inline-response';
+            div.style.width = '100%';
+            div.textContent = preview;
+            var closeBtn = document.createElement('button');
+            closeBtn.className = 'btn btn-xs btn-secondary';
+            closeBtn.textContent = 'Close';
+            closeBtn.style.marginTop = '8px';
+            closeBtn.onclick = function(e) { e.stopPropagation(); div.remove(); };
+            div.appendChild(document.createElement('br'));
+            div.appendChild(closeBtn);
+            form.after(div);
+        })
+        .catch(function(err) {
+            btn.textContent = 'Validate & Test';
+            btn.disabled = false;
+            showToast('Validation failed: ' + err.message, true);
+        });
+}
 
 // === Init ===
 refreshEndpoints();

@@ -55,29 +55,6 @@
         </div>
     </div>
 
-    <!-- Sparkline Metrics -->
-    <div class="sparkline-grid">
-        <div class="sparkline-card">
-            <div class="sparkline-label">Heap Used</div>
-            <div class="sparkline-value" id="spark-heap-val">-- MB</div>
-            <canvas id="spark-heap" height="40"></canvas>
-        </div>
-        <div class="sparkline-card">
-            <div class="sparkline-label">Live Threads</div>
-            <div class="sparkline-value" id="spark-thread-val">--</div>
-            <canvas id="spark-threads" height="40"></canvas>
-        </div>
-        <div class="sparkline-card">
-            <div class="sparkline-label">CPU Usage</div>
-            <div class="sparkline-value" id="spark-cpu-val">--%</div>
-            <canvas id="spark-cpu" height="40"></canvas>
-        </div>
-        <div class="sparkline-card">
-            <div class="sparkline-label">Greetings / min</div>
-            <div class="sparkline-value" id="spark-gpm-val">0</div>
-            <canvas id="spark-activity" height="40"></canvas>
-        </div>
-    </div>
 
     <div class="grid-2">
         <!-- Quick Greeting Test -->
@@ -136,23 +113,6 @@
 </div>
 
 <script>
-// === Sparkline Chart Setup ===
-function createSparkline(canvasId, color) {
-    var ctx = document.getElementById(canvasId).getContext('2d');
-    return new Chart(ctx, {
-        type: 'line',
-        data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: color.replace('1)', '0.1)').replace('rgb', 'rgba'), fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }] },
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
-            plugins: { legend: { display: false } },
-            scales: { x: { display: false }, y: { display: false } }
-        }
-    });
-}
-var sparkHeap = createSparkline('spark-heap', 'rgb(99,102,241)');
-var sparkThreads = createSparkline('spark-threads', 'rgb(16,185,129)');
-var sparkCpu = createSparkline('spark-cpu', 'rgb(245,158,11)');
-
 // Activity bar chart (greetings per minute)
 var activityBuckets = new Array(10).fill(0);
 var activityLabels = [];
@@ -168,9 +128,6 @@ var activityChart = new Chart(actCtx, {
     }
 });
 
-// Activity sparkline
-var sparkActivity = createSparkline('spark-activity', 'rgb(99,102,241)');
-var activityPerMin = [];
 
 // Track greeting timestamps for per-minute bucketing
 var greetingTimestamps = [];
@@ -188,22 +145,8 @@ function recalcActivity() {
     }
     activityChart.data.datasets[0].data = buckets;
     activityChart.update('none');
-    // Current minute rate
-    var currentMin = buckets[9] || 0;
-    document.getElementById('spark-gpm-val').textContent = currentMin;
-    sparkActivity.data.labels.push('');
-    sparkActivity.data.datasets[0].data.push(currentMin);
-    if (sparkActivity.data.labels.length > 30) { sparkActivity.data.labels.shift(); sparkActivity.data.datasets[0].data.shift(); }
-    sparkActivity.update('none');
 }
 setInterval(recalcActivity, 5000);
-
-function pushSparkData(chart, val) {
-    chart.data.labels.push('');
-    chart.data.datasets[0].data.push(val);
-    if (chart.data.labels.length > 60) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-    chart.update('none');
-}
 
 // === Confetti ===
 var lastGreetingCount = 0;
@@ -401,14 +344,6 @@ eventSource.addEventListener('metrics', function(e) {
     // Mini gauge
     document.getElementById('mini-mem-gauge').setAttribute('stroke-dashoffset', 125.66 * (1 - memPct));
     document.getElementById('mini-mem-pct').textContent = Math.round(memPct * 100) + '%';
-
-    // Sparklines
-    pushSparkData(sparkHeap, parseFloat(usedMB));
-    document.getElementById('spark-heap-val').textContent = usedMB + ' MB';
-    pushSparkData(sparkThreads, s.threadCount);
-    document.getElementById('spark-thread-val').textContent = s.threadCount;
-    pushSparkData(sparkCpu, s.cpuUsage.toFixed(1));
-    document.getElementById('spark-cpu-val').textContent = s.cpuUsage.toFixed(1) + '%';
 });
 
 eventSource.addEventListener('greeting', function(e) {
