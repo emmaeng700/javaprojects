@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Hello World!</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/" class="brand">Securing Web</a>
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/hello}">Greeting</a>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <h1 th:inline="text">Hello <span th:remove="tag" sec:authentication="name">thymeleaf</span>!</h1>
+        <p>You are successfully authenticated. This page is protected by Spring Security.</p>
+        <br/>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-danger">Sign Out</button>
+        </form>
+        <a th:href="@{/}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+
+<footer>
+    <p>Spring Security Web Application &copy; 2026</p>
+</footer>
+</body>
+</html>
