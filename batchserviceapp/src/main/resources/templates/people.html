@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('People - Batch Service')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1>People</h1>
+
+    <div th:if="${#lists.isEmpty(people)}" class="card empty-state">
+        <p>No people in the database yet. Run the batch job to import data.</p>
+        <br/>
+        <a th:href="@{/}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(people)}" class="card">
+        <h3>Imported People (<span th:text="${#lists.size(people)}"></span> records)</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="person : ${people}">
+                <td th:text="${person.personId}"></td>
+                <td th:text="${person.firstName}"></td>
+                <td th:text="${person.lastName}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

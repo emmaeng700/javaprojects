@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Job History - Batch Service')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1>Job Execution History</h1>
+
+    <div th:if="${#lists.isEmpty(executions)}" class="card empty-state">
+        <p>No batch jobs have been executed yet.</p>
+        <br/>
+        <a th:href="@{/}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(executions)}" class="card">
+        <h3>All Executions</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Job ID</th>
+                <th>Instance ID</th>
+                <th>Status</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Exit Code</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="exec : ${executions}">
+                <td th:text="${exec.jobId}"></td>
+                <td th:text="${exec.jobInstance.instanceId}"></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${exec.status.name() == 'COMPLETED'} ? 'badge-completed' : (${exec.status.name() == 'STARTED'} ? 'badge-started' : 'badge-failed')"
+                          th:text="${exec.status}"></span>
+                </td>
+                <td th:text="${exec.startTime}"></td>
+                <td th:text="${exec.endTime}"></td>
+                <td th:text="${exec.exitStatus.exitCode}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br/>
+    <form th:action="@{/run-job}" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-primary">Run New Job</button>
+    </form>
+    <a th:href="@{/}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

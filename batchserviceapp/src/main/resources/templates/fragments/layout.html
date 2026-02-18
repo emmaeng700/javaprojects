@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title}">Batch Service</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav th:fragment="navbar" class="navbar">
+    <a href="/" class="brand">Batch Service</a>
+    <a th:href="@{/}">Dashboard</a>
+    <a th:href="@{/people}">People</a>
+    <a th:href="@{/jobs}">Job History</a>
+</nav>
+
+<footer th:fragment="footer">
+    <p>Spring Batch Processing Service &copy; 2026</p>
+</footer>
+</body>
+</html>
