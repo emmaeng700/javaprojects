@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Spring Security Example</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/" class="brand">Securing Web</a>
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/hello}">Greeting</a>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <h1>Welcome!</h1>
+        <p>This is a Spring Security demo application. The home page is public,
+           but the greeting page requires authentication.</p>
+        <br/>
+        <a th:href="@{/hello}" class="btn btn-primary">See Greeting</a>
+    </div>
+</div>
+
+<footer>
+    <p>Spring Security Web Application &copy; 2026</p>
+</footer>
+</body>
+</html>
