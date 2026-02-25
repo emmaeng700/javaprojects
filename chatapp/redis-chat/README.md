@@ -1,0 +1,2 @@
+A real-time chat application built with Spring Boot, Redis Pub/Sub, and WebSockets. The backend uses Redis as a message broker — messages are published to Redis channels and broadcast to connected clients via WebSocket. Redis also persists chat history. I built a RedisSubscriptionManager to
+  dynamically manage channel subscriptions and a MessageHistoryService to retrieve past messages on reconnect. Containerized with Docker Compose for local development.
