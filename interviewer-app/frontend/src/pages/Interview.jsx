@@ -2,24 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import confetti from "canvas-confetti";
-
-// ── Text-to-Speech ────────────────────────────────────────────────────────────
-function speak(text) {
-  if (!window.speechSynthesis) return;
-  // Cancel anything already speaking
-  window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.rate   = 0.95;
-  utt.pitch  = 0.9;
-  utt.volume = 1;
-  // Pick a deep/professional voice if available
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v =>
-    /google us english|alex|daniel|karen/i.test(v.name)
-  ) || voices.find(v => v.lang === "en-US") || voices[0];
-  if (preferred) utt.voice = preferred;
-  window.speechSynthesis.speak(utt);
-}
+import { speakText, stopSpeaking } from "../utils/tts";
 
 import { useSession } from "../context/SessionContext";
 import { useSpeech } from "../hooks/useSpeech";
@@ -120,28 +103,10 @@ export default function Interview() {
     setMessages((prev) => [...prev, { role, text, meta, id: Date.now() + Math.random() }]);
     setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     if (role === "interviewer" && ttsEnabled) {
-      // Load voices async on first call (Chrome requires user gesture first)
-      const doSpeak = () => {
-        setIsSpeaking(true);
-        const utt = new SpeechSynthesisUtterance(text);
-        utt.rate   = 0.95;
-        utt.pitch  = 0.9;
-        utt.volume = 1;
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v =>
-          /google us english|alex|daniel|karen/i.test(v.name)
-        ) || voices.find(v => v.lang === "en-US") || voices[0];
-        if (preferred) utt.voice = preferred;
-        utt.onend = () => setIsSpeaking(false);
-        utt.onerror = () => setIsSpeaking(false);
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utt);
-      };
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.addEventListener("voiceschanged", doSpeak, { once: true });
-      } else {
-        doSpeak();
-      }
+      speakText(text, {
+        onStart: () => setIsSpeaking(true),
+        onEnd:   () => setIsSpeaking(false),
+      });
     }
   }
 
@@ -434,7 +399,7 @@ export default function Interview() {
           <button
             className={`btn-tts ${ttsEnabled ? "active" : ""}`}
             onClick={() => {
-              if (ttsEnabled) window.speechSynthesis.cancel();
+              if (ttsEnabled) stopSpeaking();
               setTtsEnabled(v => !v);
             }}
           >
