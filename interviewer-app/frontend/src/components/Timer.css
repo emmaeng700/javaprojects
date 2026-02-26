@@ -1,0 +1,47 @@
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  --tc: var(--accent);
+}
+.timer.warning { --tc: var(--warn); }
+.timer.urgent  { --tc: var(--danger); }
+
+.timer-section {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.timer-display {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--tc);
+  transition: color 0.5s;
+  line-height: 1;
+}
+
+.timer.urgent .timer-display { animation: blink 1s step-end infinite; }
+
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+
+.timer-bar-track {
+  width: 80px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: var(--tc);
+  border-radius: 2px;
+  transition: width 1s linear, background 0.5s;
+}

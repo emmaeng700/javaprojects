@@ -1,0 +1,48 @@
+.avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 3px solid var(--avatar-color, var(--primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  transition: border-color 0.4s;
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--avatar-color, var(--primary));
+  transition: color 0.4s;
+}
+
+.avatar-pulse {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--avatar-color, var(--primary));
+  opacity: 0;
+  animation: pulse 2.4s ease-out infinite;
+}
+
+@keyframes pulse {
+  0%   { transform: translateX(-50%) scale(1);   opacity: 0.5; }
+  100% { transform: translateX(-50%) scale(1.7); opacity: 0; }
+}

@@ -1,0 +1,98 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px 60px;
+  gap: 60px;
+}
+
+.home-hero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.home-badge {
+  display: inline-block;
+  background: rgba(124, 109, 250, 0.15);
+  border: 1px solid rgba(124, 109, 250, 0.4);
+  color: var(--primary-h);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 100px;
+}
+
+.home-title {
+  font-size: clamp(48px, 7vw, 80px);
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.home-title .accent { color: var(--primary); }
+
+.home-sub {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.7;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 36px;
+  border-radius: var(--radius);
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover  { background: var(--primary-h); }
+.btn-primary:active { transform: scale(0.98); }
+
+.home-cta { font-size: 17px; padding: 16px 48px; border-radius: 100px; }
+
+/* Features */
+.home-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+.feature-card:hover { border-color: var(--primary); }
+
+.feature-icon { font-size: 26px; }
+.feature-card h3 { font-size: 14px; font-weight: 600; }
+.feature-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* Mode pills */
+.home-modes { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.mode-pill {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+.mode-pill.behavioral { border-color: var(--warn);    color: var(--warn);    background: rgba(255,183,64,0.08); }
+.mode-pill.technical  { border-color: var(--primary); color: var(--primary); background: rgba(124,109,250,0.08); }
+.mode-pill.design     { border-color: var(--accent);  color: var(--accent);  background: rgba(0,212,255,0.08); }
